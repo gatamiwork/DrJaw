@@ -1,0 +1,32 @@
+﻿<UserControl x:Class="DrJaw.Views.Controls.MainMenu"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             Height="Auto" Width="Auto">
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+
+        <!-- Основное меню -->
+        <Menu Grid.Column="0"
+              FontSize="16"
+              VerticalAlignment="Top"
+              Height="Auto">
+            <MenuItem Header="Настройка" />
+            <MenuItem Header="Продажи" />
+            <MenuItem Click="Lom_Click" Header="Лом" />
+            <MenuItem Header="WooCommerce" />
+        </Menu>
+
+        <!-- Кнопка/меню "Сменить пользователя" -->
+        <Menu Grid.Column="1"
+              FontSize="16"
+              VerticalAlignment="Top"
+              Height="Auto">
+            <MenuItem Click="ChangeUser" Header="Сменить пользователя" />
+        </Menu>
+    </Grid>
+</UserControl>

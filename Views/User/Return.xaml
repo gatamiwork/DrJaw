@@ -1,0 +1,116 @@
+﻿<Window x:Class="DrJaw.Views.User.Return"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
+        xmlns:local="clr-namespace:DrJaw.Views.User"
+        mc:Ignorable="d"
+        Title="Return" Height="450" Width="800">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <!-- для DatePicker -->
+            <RowDefinition Height="*"/>
+            <!-- для DataGrid -->
+            <RowDefinition Height="Auto"/>
+            <!-- для Button -->
+        </Grid.RowDefinitions>
+
+        <DatePicker x:Name="DatePickerReturn" Grid.Row="0" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,0,0,10" SelectedDateChanged="DatePickerReturn_SelectedDateChanged"
+            SelectedDate="{x:Static sys:DateTime.Today}" />
+        <DataGrid x:Name="DataGridReturnItems" Margin="0,0,0,10"
+              Grid.Row="1"
+              Style="{StaticResource MaterialDesignDataGrid}" 
+              AutoGenerateColumns="False"
+              IsReadOnly="True"
+              RowHeight="40">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Id" Binding="{Binding Id}" Width="200">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="FontSize" Value="16"/>
+                            <Setter Property="FontFamily" Value="Segoe UI"/>
+                            <Setter Property="VerticalAlignment" Value="Center"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+                <DataGridTextColumn Header="Articul" Binding="{Binding Articul}" Width="200">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="FontSize" Value="16"/>
+                            <Setter Property="FontFamily" Value="Segoe UI"/>
+                            <Setter Property="VerticalAlignment" Value="Center"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+                <DataGridTextColumn Header="Weight" Binding="{Binding Weight}" Width="200">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="FontSize" Value="16"/>
+                            <Setter Property="FontFamily" Value="Segoe UI"/>
+                            <Setter Property="VerticalAlignment" Value="Center"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+                <DataGridTextColumn Header="Size" Binding="{Binding Size}" Width="200">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="FontSize" Value="16"/>
+                            <Setter Property="FontFamily" Value="Segoe UI"/>
+                            <Setter Property="VerticalAlignment" Value="Center"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+                <DataGridTextColumn Header="Stone" Binding="{Binding Stone}" Width="200">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="FontSize" Value="16"/>
+                            <Setter Property="FontFamily" Value="Segoe UI"/>
+                            <Setter Property="VerticalAlignment" Value="Center"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+                <DataGridTextColumn Header="Price" Binding="{Binding Price}" Width="200">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="FontSize" Value="16"/>
+                            <Setter Property="FontFamily" Value="Segoe UI"/>
+                            <Setter Property="VerticalAlignment" Value="Center"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+                <DataGridTextColumn Header="Bonus" Binding="{Binding Bonus}" Width="200">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="FontSize" Value="16"/>
+                            <Setter Property="FontFamily" Value="Segoe UI"/>
+                            <Setter Property="VerticalAlignment" Value="Center"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+                <DataGridTextColumn Header="TotalPrice" Binding="{Binding TotalPrice}" Width="200">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="FontSize" Value="16"/>
+                            <Setter Property="FontFamily" Value="Segoe UI"/>
+                            <Setter Property="VerticalAlignment" Value="Center"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+                <DataGridTextColumn Header="CartId" Binding="{Binding CartId}" Width="200">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="FontSize" Value="16"/>
+                            <Setter Property="FontFamily" Value="Segoe UI"/>
+                            <Setter Property="VerticalAlignment" Value="Center"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+            
+                <Button Click="button_Click" Grid.Row="2" Content="Подтвердить возврат" Width="160" Height="30"
+            HorizontalAlignment="Right" VerticalAlignment="Bottom"/>
+    </Grid>
+</Window>

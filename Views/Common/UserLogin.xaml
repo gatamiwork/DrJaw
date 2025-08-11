@@ -1,0 +1,42 @@
+﻿<Window x:Class="DrJaw.Views.Common.UserLogin"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="Доктор ювелирка" Height="260" Width="400"
+        materialDesign:ColorZoneAssist.Mode="PrimaryDark" WindowStartupLocation="CenterScreen">
+
+    <Grid Margin="20">
+        <StackPanel VerticalAlignment="Top">
+            <Label
+                Content="Выбор пользователя"
+                Margin="0,0,0,15" 
+                VerticalAlignment="Top"
+                Style="{StaticResource MaterialDesignLabel}" FontSize="16" HorizontalAlignment="Center"/>
+            
+            <ComboBox x:Name="comboboxMSSQLUser"
+                Margin="0,0,0,20" 
+                VerticalAlignment="Top"
+                Style="{StaticResource MaterialDesignComboBox}" FontSize="14"
+                materialDesign:HintAssist.Hint="Выберите пользователя" 
+                DisplayMemberPath="Name"
+                SelectedValuePath="Id"/>
+
+            <ComboBox x:Name="comboboxMSSQLMart"
+                Margin="0,0,0,20" 
+                VerticalAlignment="Top"
+                Style="{StaticResource MaterialDesignComboBox}" FontSize="14"
+                materialDesign:HintAssist.Hint="Выберите магазин"
+                DisplayMemberPath="Name"
+                SelectedValuePath="Id"/>
+
+            <Button Content="Выбрать"
+                    Background="White"
+                    Foreground="Black"
+                    BorderBrush="Gray"
+                    MinWidth="100"
+                    Padding="16 8"
+                    Click="Connect_Click"
+                    Style="{StaticResource MaterialDesignOutlinedButton}" FontWeight="Bold" FontSize="16" FontFamily="Segoe UI" Height="37"/>
+        </StackPanel>
+    </Grid>
+</Window>

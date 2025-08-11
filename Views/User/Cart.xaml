@@ -1,0 +1,129 @@
+﻿<Window x:Class="DrJaw.Views.User.Cart"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Оформление заказа"
+        Height="500" Width="980"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="CanResize">
+    <Window.Resources>
+        <x:Array x:Key="BonusList" Type="sys:Int32" xmlns:sys="clr-namespace:System;assembly=mscorlib">
+            <sys:Int32>0</sys:Int32>
+            <sys:Int32>3</sys:Int32>
+            <sys:Int32>5</sys:Int32>
+            <sys:Int32>7</sys:Int32>
+        </x:Array>
+    </Window.Resources>
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <!-- Заголовок -->
+        <Grid Grid.Row="0" Grid.ColumnSpan="3" Margin="0,0,0,5">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Label Content="Список изделий" FontWeight="Bold" FontSize="14" />
+            <Button Content="Отмена заказа" Click="buttonRemoveCart" Grid.Column="1" Width="140" />
+        </Grid>
+        <!-- Таблица -->
+        <DataGrid x:Name="CartDataGrid"
+                  Grid.Row="1"
+                  Grid.ColumnSpan="3"
+                  AutoGenerateColumns="False"
+                  CanUserAddRows="False"
+                  CanUserDeleteRows="False"
+                  SelectionMode="Single"
+                  Margin="0,0,0,10"
+                  RowHeight="120">
+            <DataGrid.Columns>
+                <DataGridTemplateColumn Header="Фото" Width="200">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Image Source="{Binding Image}" Stretch="Uniform" Height="100"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn Header="Артикул" Binding="{Binding Articul}" />
+                <DataGridTextColumn Header="Вес" Binding="{Binding Weight}" />
+                <DataGridTextColumn Header="Размер" Binding="{Binding Size}" />
+                <DataGridComboBoxColumn Header="Скидка"
+                                        ItemsSource="{StaticResource BonusList}"
+                                        SelectedItemBinding="{Binding Bonus, Mode=TwoWay}" />
+                <DataGridTextColumn Header="Цена" Binding="{Binding Price}" />
+                <DataGridTextColumn Header="Итоговая цена" Binding="{Binding TotalPrice}" />
+                <DataGridTemplateColumn Header="Действие" Width="80">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button Click="buttonRemoveItemInCart" Content="Убрать" Tag="{Binding}" Width="60"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+        <!-- Нижняя панель -->
+        <UniformGrid Grid.Row="2" Grid.Column="0" Columns="2" Margin="0,0,0,5">
+            <Button Content="Добавить лом" Margin="0,0,10,0" IsEnabled="False"/>
+            <Button Content="Удалить лом" IsEnabled="False"/>
+        </UniformGrid>
+        <Label Content="Вес лома: 0" Grid.Row="2" Grid.ColumnSpan="2" Grid.Column="1" VerticalAlignment="Center" Margin="0,0,10,0"/>
+        <StackPanel Grid.Row="3" Grid.Column="0"
+            Orientation="Horizontal"
+            VerticalAlignment="Center"
+            HorizontalAlignment="Stretch"
+            Margin="0,0,0,5">
+
+            <Label Content="Общая скидка:"
+           VerticalAlignment="Center"
+           Margin="0,0,5,0"/>
+
+            <ComboBox x:Name="ComboBoxTotalBonus"
+              SelectedIndex="0"
+              HorizontalAlignment="Stretch"
+              SelectionChanged="ComboBoxTotalBonus_SelectionChanged"
+              Width="200"
+                Margin="0,0,10,0">
+                <ComboBoxItem Content="0%" Tag="0"/>
+                <ComboBoxItem Content="3%" Tag="3"/>
+                <ComboBoxItem Content="5%" Tag="5"/>
+                <ComboBoxItem Content="7%" Tag="7"/>
+            </ComboBox>
+        </StackPanel>
+        <Grid Grid.Row="4" Margin="0,0,0,5" VerticalAlignment="Center">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <!-- метка -->
+                <ColumnDefinition Width="*"/>
+                <!-- растягиваемый ComboBox -->
+            </Grid.ColumnDefinitions>
+
+            <Label Grid.Column="0"
+           Content="Вид оплаты:"
+           VerticalAlignment="Center"
+           Margin="0,0,5,0"/>
+
+            <ComboBox Grid.Column="1"
+              x:Name="ComboBoxPaymentTypes"
+              Margin="0,0,10,0"
+              DisplayMemberPath="Name" SelectedValuePath="Id"
+              HorizontalAlignment="Stretch"/>
+        </Grid>
+        <Label x:Name="LabelTotalPrice"
+           Grid.Row="3" Grid.Column="1" Grid.RowSpan="2"
+           Content="Итого: &lt;TotalSum&gt;"
+           FontSize="20"
+           FontWeight="Bold"
+           Margin="0,0,0,0"
+           VerticalAlignment="Center" HorizontalAlignment="Left"/>
+        <Button Content="Оплата" Grid.Row="3" Grid.Column="2" Grid.RowSpan="2" Width="160" Height="60" FontSize="16" FontWeight="Bold" Margin="20,0,0,0" HorizontalAlignment="Right" Click="buttonAdd_Click"/>
+    </Grid>
+</Window>
