@@ -25,38 +25,71 @@ namespace DrJaw.Views.User
         public TransferOut(MSSQLItem item)
         {
             InitializeComponent();
-            _itemToTransfer = item;
+            _itemToTransfer = item ?? throw new ArgumentNullException(nameof(item));
             Loaded += TransferOut_Loaded;
         }
         private void TransferOut_Loaded(object sender, RoutedEventArgs e)
         {
-            var martsWithoutCurrent = Storage.Marts
-                .Where(m => m.Id != Storage.CurrentMart?.Id)
-                .ToList();
-            comboboxTransfer.ItemsSource = martsWithoutCurrent;
+            // Информация о товаре
+            TextItemInfo.Text =
+                $"Артикул: {_itemToTransfer.Articul}\n" +
+                $"Тип: {_itemToTransfer.Type}, Металл: {_itemToTransfer.Metal}\n" +
+                $"Вес: {_itemToTransfer.Weight:F2}, Цена: {_itemToTransfer.Price:F2}";
+
+            // Безопасно получаем список магазинов ≠ текущему
+            var currentMartId = Storage.CurrentMart?.Id;
+            var marts = (Storage.Marts ?? Enumerable.Empty<MSSQLMart>())
+                        .Where(m => currentMartId == null || m.Id != currentMartId.Value)
+                        .ToList();
+
+            comboboxTransfer.ItemsSource = marts;
+
+            if (marts.Count == 0)
+            {
+                MessageBox.Show("Нет доступных магазинов для отправки.", "Внимание",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+                DialogResult = false;
+                Close();
+                return;
+            }
             comboboxTransfer.SelectedIndex = 0;
         }
         private async void Action(object sender, RoutedEventArgs e)
         {
-            if (comboboxTransfer.SelectedValue == null)
+            if (comboboxTransfer.SelectedValue is not int martId)
             {
-                MessageBox.Show("Пожалуйста, выберите магазин.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Пожалуйста, выберите магазин-получатель.", "Ошибка",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
+
+            ButtonTransfer.IsEnabled = false;
+
             try
             {
-                int martId = Convert.ToInt32(comboboxTransfer.SelectedValue);
-
-                bool transfer = await Storage.Repo.TransferItem(martId, _itemToTransfer.mid);
-                if (transfer)
+                // Желательно иметь асинхронную версию в репо: TransferItemAsync(...)
+                bool transferOk = await Storage.Repo.TransferItem(martId, _itemToTransfer.mid);
+                if (transferOk)
                 {
                     DrJaw.Utils.EventBus.Publish("ItemsChanged");
+                    DialogResult = true;
                     Close();
+                }
+                else
+                {
+                    MessageBox.Show("Не удалось выполнить отправку.", "Ошибка",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка при перемещении товара: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Ошибка при перемещении товара: {ex.Message}", "Ошибка",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                // Разблокируем если окно не закрыли
+                if (IsLoaded) ButtonTransfer.IsEnabled = true;
             }
         }
     }

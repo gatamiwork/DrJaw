@@ -4,10 +4,26 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:DrJaw.Views.User"
-        mc:Ignorable="d"
-        Title="LomOut" Height="114" Width="187">
+        mc:Ignorable="d" WindowStartupLocation="CenterOwner" 
+        Title="LomOut" Height="168" Width="306">
     <Grid>
-        <TextBox x:Name="textBoxLom" HorizontalAlignment="Left" Margin="10,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120"/>
-        <Button x:Name="buttonAction" Content="Button" HorizontalAlignment="Left" Margin="10,33,0,0" VerticalAlignment="Top" Width="120" Click="Action"/>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="Вес, грамм:" Grid.Row="1" Margin="0,0,0,4"/>
+        <TextBox x:Name="textBoxLom"
+             Grid.Row="2"
+             Width="180"
+             HorizontalAlignment="Left"
+             Margin="0,0,0,12" />
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button x:Name="buttonAction" Content="Отгрузить" Width="120" Height="32" Margin="0,0,8,0"
+              IsDefault="True" Click="Action"/>
+            <Button Content="Отмена" Width="100" Height="32" IsCancel="True"/>
+        </StackPanel>
     </Grid>
 </Window>

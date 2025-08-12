@@ -1,4 +1,5 @@
 ﻿using DrJaw.Models;
+using DrJaw.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,79 +16,161 @@ using System.Windows.Shapes;
 
 namespace DrJaw.Views.User
 {
-    /// <summary>
-    /// Логика взаимодействия для TransferIn.xaml
-    /// </summary>
     public partial class TransferIn : Window
     {
+        private readonly SemaphoreSlim _loadLock = new(1, 1);
+        private CancellationTokenSource? _loadCts;
         public TransferIn()
         {
             InitializeComponent();
             Loaded += TransferIn_Loaded;
         }
-        private void CalculateTransferTotals()
+        private async void TransferIn_Loaded(object sender, RoutedEventArgs e)
         {
-            decimal totalWeight = 0;
-            int totalCount = 0;
-
-            foreach (var item in DataGridTransfer.Items)
+            await LoadDataAsync();
+        }
+        private async Task LoadDataAsync()
+        {
+            // если грузимся — не стартуем вторую; просто отменим текущую и перезапустим после
+            if (!await _loadLock.WaitAsync(0))
             {
-                if (item is MSSQLTransferItem transferItem)
-                {
-                    totalWeight += transferItem.Weight;
-                    totalCount++;
-                }
+                _loadCts?.Cancel();
+                return;
             }
+            var newCts = new CancellationTokenSource();
+            var oldCts = Interlocked.Exchange(ref _loadCts, newCts);
+            oldCts?.Cancel();
+            oldCts?.Dispose();
+            var ct = newCts.Token;
+
+            try
+            {
+                IsEnabled = false;
+
+                if (Storage.CurrentMart?.Id is not int martId)
+                {
+                    DataGridTransfer.ItemsSource = null;
+                    TotalWeight.Content = "Общий вес: 0.00";
+                    TotalCount.Content = "Количество: 0";
+                    return;
+                }
+
+                // если есть перегрузка с CancellationToken — лучше использовать её
+                var items = await Storage.Repo.LoadTransferItems(martId /*, ct*/);
+
+                if (ct.IsCancellationRequested) return;
+
+                DataGridTransfer.ItemsSource = items;
+                UpdateTotals();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка загрузки: {ex.Message}", "Ошибка",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsEnabled = true;
+                _loadLock.Release();
+            }
+        }
+        private void UpdateTotals()
+        {
+            var list = (DataGridTransfer.ItemsSource as IEnumerable<MSSQLTransferItem>)?.ToList()
+                       ?? new List<MSSQLTransferItem>();
+
+            decimal totalWeight = list.Sum(x => x.Weight);
+            int totalCount = list.Count;
 
             TotalWeight.Content = $"Общий вес: {totalWeight:F2}";
             TotalCount.Content = $"Количество: {totalCount}";
         }
-
-        private async void TransferIn_Loaded(object sender, RoutedEventArgs e)
-        {
-            await LoadData();
-        }
-        private async Task LoadData()
-        {
-            var items = await Storage.Repo.LoadTransferItems(Storage.CurrentMart.Id);
-
-            DataGridTransfer.ItemsSource = items;
-            CalculateTransferTotals();
-        }
-        private async void buttonCancelTransfer_Click(object sender, EventArgs e)
+        // ✅ важно: RoutedEventArgs, не EventArgs
+        private async void buttonCancelTransfer_Click(object sender, RoutedEventArgs e)
         {
             if (DataGridTransfer.SelectedItem is not MSSQLTransferItem selectedItem)
             {
-                MessageBox.Show("Пожалуйста, выберите изделие", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Пожалуйста, выберите изделие.", "Ошибка",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
-            var result = MessageBox.Show("Вернуть изделие?", "Подтверждение", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            var confirm = MessageBox.Show("Отменить входящий трансфер (вернуть отправителю)?",
+                "Подтверждение", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            if (confirm != MessageBoxResult.Yes) return;
 
-            if (result == MessageBoxResult.Yes)
+            SetButtonsEnabled(false);
+            try
             {
+                // ⚠️ стандартизируй репозиторий: сделай CancelTransferAsync(selectedItem.Id)
+                // Временно оставляю твой вызов:
                 await Storage.Repo.TransferItem(null, selectedItem.Id);
-                await LoadData();
+
+                EventBus.Publish("ItemsChanged");
+                await LoadDataAsync();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при отмене: {ex.Message}", "Ошибка",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                SetButtonsEnabled(true);
             }
         }
         private async void buttonTranster_Click(object sender, RoutedEventArgs e)
         {
             if (DataGridTransfer.SelectedItem is not MSSQLTransferItem selectedItem)
             {
-                MessageBox.Show("Пожалуйста, выберите изделие", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Пожалуйста, выберите изделие.", "Ошибка",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
+            if (Storage.CurrentMart?.Id is not int currentMartId)
+            {
+                MessageBox.Show("Магазин не выбран.", "Ошибка",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            SetButtonsEnabled(false);
             try
             {
-                var id = selectedItem.Id;
-                await Storage.Repo.TransferItem(null, id, Storage.CurrentMart?.Id);
-                await LoadData();
+                // ⚠️ лучше иметь явный метод AcceptTransferAsync(selectedItem.Id, currentMartId)
+                await Storage.Repo.TransferItem(null, selectedItem.Id, currentMartId);
+
+                EventBus.Publish("ItemsChanged");
+                await LoadDataAsync();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка при перемещении товара: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Ошибка при приёме товара: {ex.Message}", "Ошибка",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
             }
+            finally
+            {
+                SetButtonsEnabled(true);
+            }
+        }
+        // Даблклик по строке = принять
+        private async void DataGridTransfer_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            if (DataGridTransfer.SelectedItem is MSSQLTransferItem _)
+                buttonTranster_Click(sender, e);
+        }
+
+        private void SetButtonsEnabled(bool enabled)
+        {
+            buttonTranster.IsEnabled = enabled;
+            buttonCancelTransfer.IsEnabled = enabled;
+        }
+
+        // Если где-то меняется ItemsSource программно — можно пересчитывать итоги
+        private void DataGridTransfer_TargetUpdated(object sender, System.Windows.Data.DataTransferEventArgs e)
+        {
+            UpdateTotals();
         }
     }
 }

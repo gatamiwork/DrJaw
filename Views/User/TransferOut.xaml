@@ -5,9 +5,39 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:DrJaw.Views.User"
         mc:Ignorable="d"
-        Title="TransferOut" Height="92" Width="243">
+        Title="TransferOut" Height="220" Width="460">
     <Grid>
-        <ComboBox x:Name="comboboxTransfer" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="207" DisplayMemberPath="Name" SelectedValuePath="Id"/>
-        <Button Content="Button" HorizontalAlignment="Left" Margin="10,37,0,0" VerticalAlignment="Top" Width="207" Click="Action"/>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        
+        <StackPanel Grid.Row="0" Margin="0,0,0,12">
+            <TextBlock Text="Товар к отправке:" FontWeight="Bold"/>
+            <TextBlock x:Name="TextItemInfo" TextWrapping="Wrap"
+                       Margin="0,4,0,0"/>
+        </StackPanel>
+        <StackPanel Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,12">
+            <TextBlock Text="Магазин-получатель:" VerticalAlignment="Center" Margin="0,0,8,0"/>
+            <ComboBox x:Name="comboboxTransfer"
+                      Width="260"
+                      DisplayMemberPath="Name"
+                      SelectedValuePath="Id"
+                      IsSynchronizedWithCurrentItem="False"/>
+        </StackPanel>
+        <Separator Grid.Row="2" Margin="0,0,0,12"/>
+
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" >
+            <Button x:Name="ButtonTransfer"
+                    Content="Отправить"
+                    Width="120" Height="32"
+                    IsDefault="True"
+                    Click="Action"/>
+            <Button Content="Отмена"
+                    Width="100" Height="32" Margin="8,0,0,0"
+                    IsCancel="True"/>
+        </StackPanel>
     </Grid>
 </Window>

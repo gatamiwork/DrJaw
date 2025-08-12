@@ -1,10 +1,12 @@
 ﻿using DrJaw.Models;
 using DrJaw.Utils;
+using MaterialDesignThemes.Wpf;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.Diagnostics;
 using System.Drawing.Drawing2D;
 using System.IO;
 using System.Linq;
@@ -12,6 +14,7 @@ using System.Reflection.Metadata;
 using System.Text;
 using System.Threading.Tasks;
 using System.Transactions;
+using System.Windows.Controls.Primitives;
 using System.Windows.Documents;
 using System.Windows.Media.Imaging;
 
@@ -196,7 +199,7 @@ namespace DrJaw
             var result = await MSSQLManager.ExecuteScalarAsync(query, parameters);
             return Convert.ToInt32(result);
         }
-        public async Task<bool> CreateItem(string articulName, int typeId, int metalId, string weight, string size, int stoneId, int manufacturerId, string price, string comment, System.Drawing.Image? image = null, int articulId = 0)
+        public async Task<bool> CreateItem(string articulName, int typeId, int metalId, decimal weight, decimal size, int stoneId, int manufacturerId, decimal price, string comment, System.Drawing.Image? image = null, int articulId = 0)
         {
             if (articulId == 0)
             {
@@ -239,31 +242,62 @@ namespace DrJaw
           var parameters2 = new List<SqlParameter>
           {
               new("@ArticulId", SqlDbType.Int)     { Value = articulId },
-              new("@Weight", SqlDbType.Decimal)    { Value = Convert.ToDecimal(weight) },
+              new("@Weight", SqlDbType.Decimal)    { Value = weight },
               new("@Size", SqlDbType.NVarChar)     { Value = size },
               new("@MartId", SqlDbType.Int)        { Value = Storage.CurrentMart?.Id },
               new("@ManufacturerId", SqlDbType.Int){ Value = manufacturerId },
-              new("@Price", SqlDbType.Decimal)     { Value = Convert.ToDecimal(price) },
+              new("@Price", SqlDbType.Decimal)     { Value = price },
               new("@StonesId", SqlDbType.Int)      { Value = stoneId },
               new("@Comment", SqlDbType.NVarChar)  { Value = comment }
           };
             int rows = await MSSQLManager.ExecuteNonQueryAsync(query2, parameters2);
             return rows > 0;
         }
-        public async Task<bool> ReturnItem(int id)
+        public async Task<bool> ReturnCartAndItemAsync(int cartItemId, CancellationToken ct = default)
         {
-            string query = @"
-                        UPDATE Items
-                        SET CartId = NULL
-                        WHERE Id = (SELECT ItemId FROM CartItems WHERE Id = @Id);
-                    ";
-            var parameters = new List<SqlParameter>
-                    {
-                        new SqlParameter("@Id", SqlDbType.Int) { Value = id }
-                    };
-            await MSSQLManager.ExecuteQueryAsync(query, parameters);
-            return true;
+            const string sql = @"
+		DECLARE @ReturnStatusId int = (SELECT TOP(1) Id FROM Statuses WHERE Name = N'Возврат');
+		IF @ReturnStatusId IS NULL
+			THROW 50000, N'Status ''Возврат'' not found', 1;
+
+		DECLARE @r1 int = 0, @r2 int = 0;
+
+		UPDATE Items
+		   SET CartId = NULL
+		 WHERE Id = (SELECT ItemId FROM CartItems WHERE Id = @CartItemId);
+		SET @r1 = @@ROWCOUNT;
+
+		IF COL_LENGTH('dbo.CartItems','ReturnedAt') IS NOT NULL
+		BEGIN
+			UPDATE CartItems
+			   SET StatusId   = @ReturnStatusId
+			 WHERE Id = @CartItemId
+			   AND (StatusId IS NULL OR StatusId <> @ReturnStatusId);
+		END
+		ELSE
+		BEGIN
+			UPDATE CartItems
+			   SET StatusId = @ReturnStatusId
+			 WHERE Id = @CartItemId
+			   AND (StatusId IS NULL OR StatusId <> @ReturnStatusId);
+		END
+		SET @r2 = @@ROWCOUNT;
+
+		SELECT CASE WHEN @r1 > 0 THEN 1 ELSE 0 END;";
+
+            int ok = 0;
+            await MSSQLManager.WithTransactionAsync(async (conn, tx) =>
+            {
+                using var cmd = new SqlCommand(sql, conn, tx);
+                cmd.Parameters.Add(new SqlParameter("@CartItemId", SqlDbType.Int) { Value = cartItemId });
+                var scalar = await cmd.ExecuteScalarAsync(ct);
+                ok = Convert.ToInt32(scalar);
+            }, ct);
+
+            return ok == 1;
         }
+
+
         public async Task<BitmapImage?> LoadImage(int id)
         {
             string query = @"
@@ -581,21 +615,6 @@ namespace DrJaw
                 TotalPrice = Convert.ToDecimal(row["TotalPrice"]),
                 CartId = Convert.ToInt32(row["CartId"])
             }).ToList();
-        }
-        public async Task<bool> ReturnCartItem(int id)
-        {
-            string query = @"
-                        UPDATE CartItems
-                        SET StatusId = (SELECT Id FROM Statuses WHERE Name = 'Возврат')
-                        WHERE Id = @Id;
-                    ";
-
-            var parameters = new List<SqlParameter>
-                    {
-                        new SqlParameter("@Id", SqlDbType.Int) { Value = id }
-                    };
-            await MSSQLManager.ExecuteQueryAsync(query, parameters);
-            return true;
         }
         // === LOM ==
         public async Task<int> CreateLom(int? userId, int? martId, bool receiving, decimal weight, decimal? pricePerGram = null)

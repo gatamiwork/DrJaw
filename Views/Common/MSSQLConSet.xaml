@@ -74,6 +74,7 @@
             Grid.Row="2"
             MessageQueue="{Binding SnackbarQueue}"
             HorizontalAlignment="Stretch"
+            IsHitTestVisible="False"
             Margin="0" />
     </Grid>
 </Window>

@@ -67,5 +67,21 @@ namespace DrJaw
             await conn.OpenAsync();
             return await cmd.ExecuteScalarAsync();
         }
+        public static async Task WithTransactionAsync(Func<SqlConnection, SqlTransaction, Task> action,CancellationToken ct = default)
+        {
+            await using var conn = new SqlConnection(_connectionString);
+            await conn.OpenAsync(ct);
+            await using var tx = await conn.BeginTransactionAsync(ct);
+            try
+            {
+                await action(conn, (SqlTransaction)tx);
+                await tx.CommitAsync(ct);
+            }
+            catch
+            {
+                await tx.RollbackAsync(ct);
+                throw;
+            }
+        }
     }
 }

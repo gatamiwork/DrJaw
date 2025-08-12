@@ -32,29 +32,38 @@ namespace DrJaw.Views.User
             // Подождать, пока значение реально обновится
             Dispatcher.BeginInvoke(new Action(UpdateTotalSum), System.Windows.Threading.DispatcherPriority.Background);
         }
+        private int GetGlobalBonusPercent()
+        {
+            if (ComboBoxTotalBonus?.SelectedItem is ComboBoxItem it &&
+                int.TryParse(it.Tag?.ToString(), out int p))
+                return Math.Clamp(p, 0, 100);
+
+            // фоллбэк: если Tag не задан, пробуем вытащить из текста "5%"
+            var txt = (ComboBoxTotalBonus?.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "0";
+            return int.TryParse(txt.Replace("%", ""), out var p2) ? Math.Clamp(p2, 0, 100) : 0;
+        }
         private void UpdateTotalSum()
         {
-            if (CartDataGrid.ItemsSource is not IEnumerable<MSSQLReadyToSold> items)
-                return;
+            if (!IsLoaded || LabelTotalPrice == null) return;
 
-            int globalBonus = 0;
-            if (ComboBoxTotalBonus.SelectedItem is ComboBoxItem selectedItem &&
-                int.TryParse(selectedItem.Tag?.ToString(), out int parsedBonus))
+            if (CartDataGrid.ItemsSource is not IEnumerable<MSSQLReadyToSold> items)
             {
-                globalBonus = parsedBonus;
+                LabelTotalPrice.Content = "Итого: 0.00 ₸";
+                return;
             }
 
-            decimal total = items.Sum(item =>
-            {
-                decimal discounted = item.Price * (1 - item.Bonus / 100m);
-                discounted *= (1 - globalBonus / 100m);
-                return discounted;
-            });
+            int globalBonus = GetGlobalBonusPercent();
 
+            decimal subtotal = 0m;
+            foreach (var it in items)
+                subtotal += it.Price * (1 - it.Bonus / 100m);
+
+            decimal total = Math.Round(subtotal * (1 - globalBonus / 100m), 2, MidpointRounding.AwayFromZero);
             LabelTotalPrice.Content = $"Итого: {total:F2} ₸";
         }
         private void ComboBoxTotalBonus_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            if (!IsLoaded) return;
             UpdateTotalSum();
         }
         private async void Cart_Loaded(object sender, RoutedEventArgs e)
@@ -103,26 +112,23 @@ namespace DrJaw.Views.User
         {
             if (sender is Button button && button.Tag is MSSQLReadyToSold item)
             {
-                var result = MessageBox.Show("Убрать изделие?", "Подтверждение", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                if (MessageBox.Show("Убрать изделие?", "Подтверждение",
+                    MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
 
-                if (result == MessageBoxResult.Yes)
+                if (await Storage.Repo.SetReadyToSold(item.Id, false))
                 {
-                    if (await Storage.Repo.SetReadyToSold(item.Id, false))
+                    if (CartDataGrid.ItemsSource is IList<MSSQLReadyToSold> list)
                     {
-                        // Удаляем из ItemsSource
-                        if (CartDataGrid.ItemsSource is IList<MSSQLReadyToSold> list)
-                        {
-                            list.Remove(item);
-                            CartDataGrid.Items.Refresh();
-
-                            if (list.Count == 0)
-                                Close();
-                        }
+                        list.Remove(item);
+                        CartDataGrid.Items.Refresh();
+                        UpdateTotalSum();
+                        if (list.Count == 0) Close();
                     }
-                    else
-                    {
-                        MessageBox.Show("Не удалось убрать изделие.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-                    }
+                }
+                else
+                {
+                    MessageBox.Show("Не удалось убрать изделие.", "Ошибка",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
         }
@@ -133,42 +139,59 @@ namespace DrJaw.Views.User
                 MessageBox.Show("Выберите метод оплаты!", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
-            // Получаем общий бонус из ComboBoxTotalBonus (например, "5%")
-            string bonusStr = (ComboBoxTotalBonus.SelectedItem as ComboBoxItem)?.Content?.ToString()?.Replace("%", "") ?? "0";
-            if (!decimal.TryParse(bonusStr, out decimal totalBonus))
-                totalBonus = 0;
 
-            // Считаем сумму по всем элементам в таблице
-            decimal totalPrice = 0;
-            foreach (var item in CartDataGrid.ItemsSource.Cast<MSSQLReadyToSold>())
+            if (CartDataGrid.ItemsSource is not IEnumerable<MSSQLReadyToSold> itemsEnum)
             {
-                totalPrice += item.TotalPrice;
+                MessageBox.Show("Корзина пуста.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
             }
+            var items = itemsEnum.ToList();
+            if (items.Count == 0)
+            {
+                MessageBox.Show("Корзина пуста.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+            int globalBonus = GetGlobalBonusPercent();
 
-            decimal discountedTotal = totalPrice * (1 - totalBonus / 100m);
+            decimal subtotal = 0m;
+            foreach (var it in items)
+                subtotal += it.Price * (1 - it.Bonus / 100m);
+
+            decimal discountedTotal = Math.Round(subtotal * (1 - globalBonus / 100m), 2, MidpointRounding.AwayFromZero);
 
             int paymentTypeId = (ComboBoxPaymentTypes.SelectedItem as MSSQLPaymentType)?.Id ?? 0;
+            if (paymentTypeId == 0)
+            {
+                MessageBox.Show("Выберите метод оплаты!", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
 
-            int cartId = await Storage.Repo.CreateCart(
+            try
+            {
+                int cartId = await Storage.Repo.CreateCart(
                     totalSum: discountedTotal,
                     martId: Storage.CurrentMart?.Id ?? 0,
                     userId: Storage.CurrentUser?.Id ?? 0,
                     paymentTypeId: paymentTypeId,
-                    bonus: (int)totalBonus
+                    bonus: globalBonus
                 );
 
-            if (cartId == 0)
-            {
-                MessageBox.Show("Ошибка при создании корзины.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
+                if (cartId == 0)
+                {
+                    MessageBox.Show("Ошибка при создании корзины.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
 
-            foreach (var item in CartDataGrid.ItemsSource.Cast<MSSQLReadyToSold>())
-            {
-                await Storage.Repo.CreateCartItem(cartId, item.Id, item.Bonus);
-            }
+                foreach (var it in items)
+                    await Storage.Repo.CreateCartItem(cartId, it.Id, it.Bonus);
 
-            this.Close();
+                DrJaw.Utils.EventBus.Publish("ItemsChanged");
+                Close();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Ошибка оформления: " + ex.Message, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
     }
 }

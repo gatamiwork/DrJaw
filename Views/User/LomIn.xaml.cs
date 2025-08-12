@@ -2,6 +2,7 @@
 using DrJaw.Utils;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -16,26 +17,42 @@ using System.Windows.Shapes;
 
 namespace DrJaw.Views.User
 {
-    /// <summary>
-    /// Логика взаимодействия для LomIn.xaml
-    /// </summary>
     public partial class LomIn : Window
     {
         public LomIn()
         {
             InitializeComponent();
+            // Маски ввода
             InputValidators.AttachNumericValidation(textBoxWeight);
-            textBoxWeight.TextChanged += TotalCount;
             InputValidators.AttachNumericValidation(textBoxPricePerGramm);
-            textBoxPricePerGramm.TextChanged += TotalCount;
+            // Автопересчёт
+            textBoxWeight.TextChanged += TotalChanged;
+            textBoxPricePerGramm.TextChanged += TotalChanged;
+
+            Loaded += (_, __) => textBoxWeight.Focus();
         }
-        private void TotalCount(object sender, TextChangedEventArgs e)
+        private static bool TryParseDecimal(string? s, out decimal v)
         {
-            if (decimal.TryParse(textBoxWeight.Text, out decimal weight) &&
-                decimal.TryParse(textBoxPricePerGramm.Text, out decimal price))
+            v = 0m;
+            if (string.IsNullOrWhiteSpace(s)) return false;
+            s = s.Trim().Replace(" ", "");
+
+            if (decimal.TryParse(s, NumberStyles.Number, CultureInfo.CurrentCulture, out v)) return true;
+            if (decimal.TryParse(s, NumberStyles.Number, CultureInfo.InvariantCulture, out v)) return true;
+
+            var curSep = CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator;
+            var altSep = curSep == "," ? "." : ",";
+            var swapped = s.Replace(altSep, curSep);
+            return decimal.TryParse(swapped, NumberStyles.Number, CultureInfo.CurrentCulture, out v);
+        }
+        private void TotalChanged(object? sender, TextChangedEventArgs e)
+        {
+            if (TryParseDecimal(textBoxWeight.Text, out var w) &&
+                TryParseDecimal(textBoxPricePerGramm.Text, out var p) &&
+                w > 0 && p > 0)
             {
-                decimal total = weight * price;
-                textBoxTotalPrice.Text = total.ToString();
+                var total = decimal.Round(w * p, 2, MidpointRounding.AwayFromZero);
+                textBoxTotalPrice.Text = total.ToString("F2", CultureInfo.CurrentCulture);
             }
             else
             {
@@ -44,21 +61,34 @@ namespace DrJaw.Views.User
         }
         private async void Action(object sender, RoutedEventArgs e)
         {
+            // Проверка окружения
+            if (Storage.CurrentUser?.Id is not int userId)
+            {
+                MessageBox.Show("Пользователь не определён.", "Ошибка",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+            if (Storage.CurrentMart?.Id is not int martId)
+            {
+                MessageBox.Show("Магазин не выбран.", "Ошибка",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+            // Парсинг значений
+            if (!TryParseDecimal(textBoxWeight.Text, out var weight) || weight <= 0)
+            {
+                MessageBox.Show("Введите корректный вес (больше 0).", "Внимание",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            if (!TryParseDecimal(textBoxPricePerGramm.Text, out var pricePerGram) || pricePerGram <= 0)
+            {
+                MessageBox.Show("Введите корректную цену за грамм (больше 0).", "Внимание",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             buttonAction.IsEnabled = false;
-
-            if (!decimal.TryParse(textBoxWeight.Text, out decimal weight) || weight <= 0)
-            {
-                MessageBox.Show("Введите корректный вес (больше 0).", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
-                buttonAction.IsEnabled = true;
-                return;
-            }
-
-            if (!decimal.TryParse(textBoxPricePerGramm.Text, out decimal pricePerGram) || pricePerGram <= 0)
-            {
-                MessageBox.Show("Введите корректную цену за грамм (больше 0).", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
-                buttonAction.IsEnabled = true;
-                return;
-            }
 
             try
             {
@@ -71,13 +101,15 @@ namespace DrJaw.Views.User
                 else
                 {
                     MessageBox.Show("Не удалось добавить лом.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-                    buttonAction.IsEnabled = true;
                 }
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Ошибка: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-                buttonAction.IsEnabled = true;
+            }
+            finally
+            {
+                if (IsLoaded) buttonAction.IsEnabled = true;
             }
         }
     }

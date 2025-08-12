@@ -20,7 +20,8 @@
                   CanUserDeleteRows="False"
                   SelectionMode="Single"
                   Margin="0,0,0,10"
-                  RowHeight="120">
+                  RowHeight="120"
+                  MouseDoubleClick="DataGridTransfer_MouseDoubleClick">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Id" Binding="{Binding Id}" />
                 <DataGridTextColumn Header="Артикул" Binding="{Binding Articul}" />
@@ -46,8 +47,8 @@
 
             <!-- Правая часть: кнопки -->
             <StackPanel Orientation="Horizontal" Grid.Column="1" VerticalAlignment="Center">
-                <Button Click="buttonCancelTransfer_Click" Content="Вернуть" Width="100" />
-                <Button Click ="buttonTranster_Click" Content="Отгрузить" Width="100" />
+                <Button x:Name="buttonCancelTransfer" Click="buttonCancelTransfer_Click" Content="Вернуть" Width="100" />
+                <Button x:Name="buttonTranster" Click ="buttonTranster_Click" Content="Отгрузить" Width="100" />
             </StackPanel>
         </Grid>
 

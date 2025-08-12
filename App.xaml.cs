@@ -11,6 +11,9 @@ namespace DrJaw
         {
             base.OnStartup(e);
 
+            // Не даём приложению закрыться, пока сами не решим
+            ShutdownMode = ShutdownMode.OnExplicitShutdown;
+
             // 1) Настройки MSSQL
             var mssqlWindow = new MSSQLConSet();
             var res = mssqlWindow.ShowDialog();
@@ -35,6 +38,9 @@ namespace DrJaw
             var mainWindow = new MainWindow();
             MainWindow = mainWindow;
             mainWindow.Show();
+
+            // Возвращаем обычный режим
+            ShutdownMode = ShutdownMode.OnMainWindowClose;
         }
     }
 }

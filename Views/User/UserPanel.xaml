@@ -99,7 +99,7 @@
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
 
-                <DataGridTextColumn Header="Weight" Binding="{Binding Weight}" Width="100">
+                <DataGridTextColumn Header="Weight" Binding="{Binding Weight, StringFormat=F2}" Width="100">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
                             <Setter Property="FontSize" Value="16"/>
@@ -120,7 +120,7 @@
                         </Style>
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
-                <DataGridTextColumn Header="Size" Binding="{Binding Size}" Width="100">
+                <DataGridTextColumn Header="Size" Binding="{Binding Size, StringFormat=F2}" Width="100">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
                             <Setter Property="FontSize" Value="16"/>
@@ -148,7 +148,7 @@
                         </Style>
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
-                <DataGridTextColumn Header="Price" Binding="{Binding Price}" Width="100">
+                <DataGridTextColumn Header="Price" Binding="{Binding Price, StringFormat=F2}" Width="100">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
                             <Setter Property="FontSize" Value="16"/>
@@ -262,6 +262,7 @@
             <Button 
                 Grid.Column="6" 
                 Content="Отгрузка"
+                    x:Name="ButtonTransferIn"
                     Padding="16,6"                     
                     Background="White"
                     Foreground="Black"
@@ -284,6 +285,7 @@
             <Button 
                 Grid.Column="8" 
                 Content="Продажа"
+                    x:Name="ButtonCart"
                     Padding="16,6"                     
                     Background="White"
                     Foreground="Black"
