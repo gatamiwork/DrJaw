@@ -76,8 +76,8 @@ namespace DrJaw.Views.User
         }
         private void UpdateTotals()
         {
-            var list = (DataGridTransfer.ItemsSource as IEnumerable<MSSQLTransferItem>)?.ToList()
-                       ?? new List<MSSQLTransferItem>();
+            var list = (DataGridTransfer.ItemsSource as IEnumerable<DGMSSQLTransferItem>)?.ToList()
+                       ?? new List<DGMSSQLTransferItem>();
 
             decimal totalWeight = list.Sum(x => x.Weight);
             int totalCount = list.Count;
@@ -88,7 +88,7 @@ namespace DrJaw.Views.User
         // ✅ важно: RoutedEventArgs, не EventArgs
         private async void buttonCancelTransfer_Click(object sender, RoutedEventArgs e)
         {
-            if (DataGridTransfer.SelectedItem is not MSSQLTransferItem selectedItem)
+            if (DataGridTransfer.SelectedItem is not DGMSSQLTransferItem selectedItem)
             {
                 MessageBox.Show("Пожалуйста, выберите изделие.", "Ошибка",
                     MessageBoxButton.OK, MessageBoxImage.Error);
@@ -121,7 +121,7 @@ namespace DrJaw.Views.User
         }
         private async void buttonTranster_Click(object sender, RoutedEventArgs e)
         {
-            if (DataGridTransfer.SelectedItem is not MSSQLTransferItem selectedItem)
+            if (DataGridTransfer.SelectedItem is not DGMSSQLTransferItem selectedItem)
             {
                 MessageBox.Show("Пожалуйста, выберите изделие.", "Ошибка",
                     MessageBoxButton.OK, MessageBoxImage.Error);
@@ -157,7 +157,7 @@ namespace DrJaw.Views.User
         // Даблклик по строке = принять
         private async void DataGridTransfer_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
-            if (DataGridTransfer.SelectedItem is MSSQLTransferItem _)
+            if (DataGridTransfer.SelectedItem is DGMSSQLTransferItem _)
                 buttonTranster_Click(sender, e);
         }
 

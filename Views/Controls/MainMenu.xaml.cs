@@ -35,5 +35,11 @@ namespace DrJaw.Views.Controls
             window.Owner = Window.GetWindow(this);
             window.ShowDialog();
         }
+        public void Order_Click(object sender, RoutedEventArgs e)
+        {
+            var window = new DrJaw.Views.Common.Orders();
+            window.Owner = Window.GetWindow(this);
+            window.ShowDialog();
+        }
     }
 }

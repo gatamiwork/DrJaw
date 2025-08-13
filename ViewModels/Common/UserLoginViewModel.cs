@@ -111,6 +111,7 @@ namespace DrJaw.ViewModels.Common
                 Users.Clear(); foreach (var u in users) Users.Add(u);
                 Marts.Clear(); foreach (var m in marts) Marts.Add(m);
 
+                Storage.Users = users?.ToList() ?? new List<MSSQLUser>();
                 Storage.Marts = marts?.ToList() ?? new List<MSSQLMart>();
                 Storage.Metals = metal?.ToList() ?? new List<MSSQLMetal>();
 

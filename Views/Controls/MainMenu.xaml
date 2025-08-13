@@ -16,7 +16,7 @@
               VerticalAlignment="Top"
               Height="Auto">
             <MenuItem Header="Настройка" />
-            <MenuItem Header="Продажи" />
+            <MenuItem Click="Order_Click" Header="Продажи" />
             <MenuItem Click="Lom_Click" Header="Лом" />
             <MenuItem Header="WooCommerce" />
         </Menu>

@@ -6,8 +6,7 @@
         Title="{Binding WindowTitle}"
         KeyDown="Window_KeyDown"
         Height="768" Width="1024"
-        WindowStartupLocation="CenterScreen"
-        materialDesign:ColorZoneAssist.Mode="PrimaryDark">
+        WindowStartupLocation="CenterScreen">
 
     <DockPanel>
         <local:MainMenu DockPanel.Dock="Top" />

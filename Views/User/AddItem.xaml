@@ -17,7 +17,7 @@
             <Border BorderBrush="Gray" BorderThickness="1">
                 <Image x:Name="ImagePreview" Stretch="Uniform" Height="160" />
             </Border>
-            <Button x:Name="ButtonAddImage" Content="Добавить изображение" Margin="0,10,0,0" Height="30" Click="ButtonAddImage_Click"/>
+            <Button x:Name="ButtonAddImage" Content="Добавить изображение" Click="ButtonAddImage_Click"/>
         </StackPanel>
 
         <!-- Правая часть -->
@@ -67,7 +67,7 @@
                 <TextBox x:Name="TextBoxComment" Grid.Row="8" Grid.Column="1" Margin="0,0,0,5" Height="80" TextWrapping="Wrap" AcceptsReturn="True"/>
             </Grid>
 
-            <Button x:Name="ButtonAdd" Content="Добавить" HorizontalAlignment="Right" Width="150" Height="30" Margin="0,10,0,0" Click="ButtonAdd_Click"/>
+            <Button x:Name="ButtonAdd" Content="Добавить" HorizontalAlignment="Right" Click="ButtonAdd_Click"/>
         </StackPanel>
     </Grid>
 </Window>

@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -22,8 +23,9 @@ namespace DrJaw.Views.Common
     public partial class Lom : Window
     {
         private bool isFormLoading = false;
-        private List<MSSQLLomItem> lomItems = new();
-        private DataTable lomTotals;
+        private List<DGMSSQLLomItem> lomItems = new();
+        private List<MSSQLLomTotals> lomTotals = new();
+
         public Lom()
         {
             InitializeComponent();
@@ -34,13 +36,17 @@ namespace DrJaw.Views.Common
             var dateStart = DateFrom.SelectedDate ?? DateTime.Today.AddMonths(-1);
             var dateEnd = (DateTo.SelectedDate ?? DateTime.Today).AddDays(1).AddTicks(-1);
 
-            lomItems = await Storage.Repo.LoadLom(dateStart, dateEnd);
-
-            if (lomItems.Count == 0)
+            try
             {
-                DataGridLom.ItemsSource = null;
-                UpdateLomTotals();
-                return;
+                lomItems = await Storage.Repo.LoadLom(dateStart, dateEnd);
+                lomTotals = await Storage.Repo.LoadLomTotals(dateStart, dateEnd);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Ошибка загрузки данных лома: " + ex.Message, "Ошибка",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+                lomItems = new();
+                lomTotals = new();
             }
 
             UpdateDataGrid();
@@ -96,58 +102,54 @@ namespace DrJaw.Views.Common
         {
             int selectedMartId = ComboBoxMart.SelectedValue is int id ? id : 0;
 
-            if (lomTotals == null || lomTotals.Rows.Count == 0)
+            // локальный хелпер на "нули"
+            void ResetTotals()
+            {
+                labelTotalWeightStart.Content = "Вес: 0.00";
+                labelTotalPriceStart.Content = "Цена: 0.00";
+                labelCurrentWeight.Content = "Вес: 0.00";
+                labelCurrentPrice.Content = "Цена: 0.00";
+                labelTotalWeightEnd.Content = "Вес: 0.00";
+                labelTotalPriceEnd.Content = "Цена: 0.00";
+            }
+
+            if (lomTotals == null || lomTotals.Count == 0)
+            {
+                ResetTotals();
                 return;
+            }
 
             if (selectedMartId == 0)
             {
-                // Агрегируем по всем строкам
-                decimal startWeight = 0, startPrice = 0;
-                decimal currentWeight = 0, currentPrice = 0;
-                decimal endWeight = 0, endPrice = 0;
-
-                foreach (DataRow r in lomTotals.Rows)
-                {
-                    startWeight += r.Field<decimal?>("StartWeight") ?? 0;
-                    startPrice += r.Field<decimal?>("StartPrice") ?? 0;
-                    currentWeight += r.Field<decimal?>("CurrentWeight") ?? 0;
-                    currentPrice += r.Field<decimal?>("CurrentPrice") ?? 0;
-                    endWeight += r.Field<decimal?>("EndWeight") ?? 0;
-                    endPrice += r.Field<decimal?>("EndPrice") ?? 0;
-                }
+                decimal startWeight = lomTotals.Sum(x => x.StartWeight);
+                decimal startPrice = lomTotals.Sum(x => x.StartPrice);
+                decimal currWeight = lomTotals.Sum(x => x.CurrentWeight);
+                decimal currPrice = lomTotals.Sum(x => x.CurrentPrice);
+                decimal endWeight = lomTotals.Sum(x => x.EndWeight);
+                decimal endPrice = lomTotals.Sum(x => x.EndPrice);
 
                 labelTotalWeightStart.Content = $"Вес: {startWeight:F2}";
                 labelTotalPriceStart.Content = $"Цена: {startPrice:F2}";
-                labelCurrentWeight.Content = $"Вес: {currentWeight:F2}";
-                labelCurrentPrice.Content = $"Цена: {currentPrice:F2}";
+                labelCurrentWeight.Content = $"Вес: {currWeight:F2}";
+                labelCurrentPrice.Content = $"Цена: {currPrice:F2}";
                 labelTotalWeightEnd.Content = $"Вес: {endWeight:F2}";
                 labelTotalPriceEnd.Content = $"Цена: {endPrice:F2}";
             }
             else
             {
-                // Фильтруем по магазину
-                var row = lomTotals.AsEnumerable()
-                    .FirstOrDefault(r => r.Field<int?>("MartId") == selectedMartId);
+                var row = lomTotals.FirstOrDefault(t => t.MartId == selectedMartId);
+                if (row == null)
+                {
+                    ResetTotals();
+                    return;
+                }
 
-                if (row != null)
-                {
-                    labelTotalWeightStart.Content = $"Вес: {row.Field<decimal?>("StartWeight") ?? 0:F2}";
-                    labelTotalPriceStart.Content = $"Цена: {row.Field<decimal?>("StartPrice") ?? 0:F2}";
-                    labelCurrentWeight.Content = $"Вес: {row.Field<decimal?>("CurrentWeight") ?? 0:F2}";
-                    labelCurrentPrice.Content = $"Цена: {row.Field<decimal?>("CurrentPrice") ?? 0:F2}";
-                    labelTotalWeightEnd.Content = $"Вес: {row.Field<decimal?>("EndWeight") ?? 0:F2}";
-                    labelTotalPriceEnd.Content = $"Цена: {row.Field<decimal?>("EndPrice") ?? 0:F2}";
-                }
-                else
-                {
-                    // Нет данных по выбранному магазину
-                    labelTotalWeightStart.Content = "Вес: 0.00";
-                    labelTotalPriceStart.Content = "Цена: 0.00";
-                    labelCurrentWeight.Content = "Вес: 0.00";
-                    labelCurrentPrice.Content = "Цена: 0.00";
-                    labelTotalWeightEnd.Content = "Вес: 0.00";
-                    labelTotalPriceEnd.Content = "Цена: 0.00";
-                }
+                labelTotalWeightStart.Content = $"Вес: {row.StartWeight:F2}";
+                labelTotalPriceStart.Content = $"Цена: {row.StartPrice:F2}";
+                labelCurrentWeight.Content = $"Вес: {row.CurrentWeight:F2}";
+                labelCurrentPrice.Content = $"Цена: {row.CurrentPrice:F2}";
+                labelTotalWeightEnd.Content = $"Вес: {row.EndWeight:F2}";
+                labelTotalPriceEnd.Content = $"Цена: {row.EndPrice:F2}";
             }
         }
         private async void Lom_Loaded(object sender, RoutedEventArgs e)
@@ -164,22 +166,23 @@ namespace DrJaw.Views.Common
             ComboBoxMart.SelectedIndex = 0;
 
             var usersWithAll = new List<MSSQLUser>
-    {
-        new MSSQLUser { Id = 0, Name = "Все пользователи" }
-    };
+        {
+            new MSSQLUser { Id = 0, Name = "Все пользователи" }
+        };
             usersWithAll.AddRange(Storage.Users);
+            Trace.WriteLine(Storage.Users.Count().ToString());
             ComboBoxUser.ItemsSource = usersWithAll;
             ComboBoxUser.SelectedIndex = 0;
             await LoadData(); 
         }
-        private async void DateFrom_SelectedDateChanged(object sender, RoutedEventArgs e)
+        private async void Date_SelectedDateChanged(object sender, RoutedEventArgs e)
         {
             if (IsLoaded) // чтобы не срабатывало при загрузке формы
             {
                 await LoadData(); // или твой метод обновления
             }
         }
-        private void ComboBoxMart_SelectionChanged(object sender, RoutedEventArgs e)
+        private void ComboBox_SelectionChanged(object sender, RoutedEventArgs e)
         {
             if (IsLoaded) // чтобы не срабатывало при загрузке формы
             {

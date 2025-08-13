@@ -20,9 +20,9 @@ namespace DrJaw.Views.User
     /// </summary>
     public partial class TransferOut : Window
     {
-        private readonly MSSQLItem _itemToTransfer;
+        private readonly DGMSSQLItem _itemToTransfer;
 
-        public TransferOut(MSSQLItem item)
+        public TransferOut(DGMSSQLItem item)
         {
             InitializeComponent();
             _itemToTransfer = item ?? throw new ArgumentNullException(nameof(item));

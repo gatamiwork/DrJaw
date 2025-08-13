@@ -118,11 +118,11 @@ namespace DrJaw.Views.User
         }
         private void DataGridReturnItems_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            ButtonReturn.IsEnabled = DataGridReturnItems.SelectedItem is MSSQLReturnCartItem;
+            ButtonReturn.IsEnabled = DataGridReturnItems.SelectedItem is DGMSSQLReturnCartItem;
         }
         private async void ButtonReturn_Click(object sender, RoutedEventArgs e)
         {
-            if (DataGridReturnItems.SelectedItem is not MSSQLReturnCartItem selectedItem)
+            if (DataGridReturnItems.SelectedItem is not DGMSSQLReturnCartItem selectedItem)
             {
                 MessageBox.Show("Пожалуйста, выберите изделие.", "Ошибка",
                     MessageBoxButton.OK, MessageBoxImage.Error);

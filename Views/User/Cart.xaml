@@ -39,36 +39,10 @@
         <DataGrid x:Name="CartDataGrid"
                   Grid.Row="1"
                   Grid.ColumnSpan="3"
-                  AutoGenerateColumns="False"
+                  AutoGenerateColumns="True"
                   CanUserAddRows="False"
                   CanUserDeleteRows="False"
-                  SelectionMode="Single"
-                  Margin="0,0,0,10"
-                  RowHeight="120">
-            <DataGrid.Columns>
-                <DataGridTemplateColumn Header="Фото" Width="200">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <Image Source="{Binding Image}" Stretch="Uniform" Height="100"/>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-                <DataGridTextColumn Header="Артикул" Binding="{Binding Articul}" />
-                <DataGridTextColumn Header="Вес" Binding="{Binding Weight}" />
-                <DataGridTextColumn Header="Размер" Binding="{Binding Size}" />
-                <DataGridComboBoxColumn Header="Скидка"
-                                        ItemsSource="{StaticResource BonusList}"
-                                        SelectedItemBinding="{Binding Bonus, Mode=TwoWay}" />
-                <DataGridTextColumn Header="Цена" Binding="{Binding Price}" />
-                <DataGridTextColumn Header="Итоговая цена" Binding="{Binding TotalPrice}" />
-                <DataGridTemplateColumn Header="Действие" Width="80">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <Button Click="buttonRemoveItemInCart" Content="Убрать" Tag="{Binding}" Width="60"/>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-            </DataGrid.Columns>
+                  SelectionMode="Single">
         </DataGrid>
         <!-- Нижняя панель -->
         <UniformGrid Grid.Row="2" Grid.Column="0" Columns="2" Margin="0,0,0,5">

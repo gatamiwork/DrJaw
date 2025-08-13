@@ -13,7 +13,7 @@ namespace DrJaw.Views.User
 {
     public partial class UserPanel : UserControl, ICleanup, IRefreshable
     {
-        private readonly ObservableCollection<MSSQLItem> _items = new();
+        private readonly ObservableCollection<DGMSSQLItem> _items = new();
         private readonly SemaphoreSlim _refreshLock = new(1, 1);
         private bool _isInitializing;
 
@@ -187,7 +187,7 @@ namespace DrJaw.Views.User
 
         private async void ButtonDeleteItem_Click(object sender, RoutedEventArgs e)
         {
-            if (DataGridItems.SelectedItem is not MSSQLItem selectedItem)
+            if (DataGridItems.SelectedItem is not DGMSSQLItem selectedItem)
             {
                 MessageBox.Show("Пожалуйста, выберите изделие для удаления.", "Ошибка",
                     MessageBoxButton.OK, MessageBoxImage.Error);
@@ -218,7 +218,7 @@ namespace DrJaw.Views.User
 
         private void buttonTransferOut_Click(object sender, RoutedEventArgs e)
         {
-            if (DataGridItems.SelectedItem is not MSSQLItem selectedItem)
+            if (DataGridItems.SelectedItem is not DGMSSQLItem selectedItem)
             {
                 MessageBox.Show("Пожалуйста, выберите изделие для отправки.", "Ошибка",
                     MessageBoxButton.OK, MessageBoxImage.Error);
@@ -243,7 +243,7 @@ namespace DrJaw.Views.User
 
         private async void buttonInCart(object sender, RoutedEventArgs e)
         {
-            if (DataGridItems.SelectedItem is not MSSQLItem selectedItem)
+            if (DataGridItems.SelectedItem is not DGMSSQLItem selectedItem)
             {
                 MessageBox.Show("Пожалуйста, выберите изделие для отправки.", "Ошибка",
                     MessageBoxButton.OK, MessageBoxImage.Error);

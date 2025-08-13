@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         Title="Доктор ювелирка" MinHeight="230" Width="440" SizeToContent="Height"
-        materialDesign:ColorZoneAssist.Mode="PrimaryDark" WindowStartupLocation="CenterScreen">
+        WindowStartupLocation="CenterScreen">
 
     <Window.InputBindings>
         <KeyBinding Key="Enter"  Command="{Binding LoginCommand}"/>
@@ -56,8 +56,7 @@
             Content="Войти"
             Command="{Binding LoginCommand}"
             IsDefault="True"
-            HorizontalAlignment="Stretch"
-            Margin="0,8,0,0"/>
+            HorizontalAlignment="Stretch" />
         <materialDesign:Snackbar Grid.Row="1"
         MessageQueue="{Binding SnackbarQueue}"
         HorizontalAlignment="Stretch"

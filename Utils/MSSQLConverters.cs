@@ -16,9 +16,9 @@ namespace DrJaw.Utils
                 CreatedAt = Convert.ToDateTime(row["CreatedAt"]),
                 UpdatedAt = row["UpdatedAt"] == DBNull.Value ? null : (DateTime?)row["UpdatedAt"]
             }).ToList();
-        public static List<MSSQLReadyToSold> ConvertToReadyToSold(DataTable table)
+        public static List<DGMSSQLReadyToSold> ConvertToReadyToSold(DataTable table)
         {
-            return table.AsEnumerable().Select(row => new MSSQLReadyToSold
+            return table.AsEnumerable().Select(row => new DGMSSQLReadyToSold
             {
                 Id = Convert.ToInt32(row["Id"]),
                 ImageData = row["Image"] is DBNull ? null : (byte[])row["Image"],
@@ -140,8 +140,8 @@ namespace DrJaw.Utils
                 UpdatedAt = row["UpdatedAt"] == DBNull.Value ? null : (DateTime?)row["UpdatedAt"]
             }).ToList();
 
-        public static List<MSSQLItem> ConvertToItems(DataTable dt) =>
-            dt.AsEnumerable().Select(row => new MSSQLItem
+        public static List<DGMSSQLItem> ConvertToItems(DataTable dt) =>
+            dt.AsEnumerable().Select(row => new DGMSSQLItem
             {
                 Type = row["Type"].ToString() ?? "",
                 Metal = row["Metal"].ToString() ?? "",
@@ -158,7 +158,7 @@ namespace DrJaw.Utils
 
         public static List<MSSQLCartItem> ConvertToCartItems(DataTable table)
         {
-            return table.AsEnumerable().Select(row => new MSSQLCartItem
+            /*return table.AsEnumerable().Select(row => new MSSQLCartItem
             {
                 ImageData = row["ImageData"] is DBNull ? null : (byte[])row["ImageData"],
                 Articul = row["Articul"]?.ToString() ?? "",
@@ -169,14 +169,16 @@ namespace DrJaw.Utils
                 ItemBonus = row["ItemBonus"] is DBNull ? 0 : Convert.ToInt32(row["ItemBonus"]),
                 Comment = row["Comment"]?.ToString() ?? "",
                 CiStatus = row["CiStatus"]?.ToString() ?? ""
-            }).ToList();
+            }).ToList();*/
+            var list = new List<MSSQLCartItem>();
+            return list;
         }
-        public static List<MSSQLTransferItem> ConvertToTransferItems(DataTable table)
+        public static List<DGMSSQLTransferItem> ConvertToTransferItems(DataTable table)
         {
-            var list = new List<MSSQLTransferItem>();
+            var list = new List<DGMSSQLTransferItem>();
             foreach (DataRow row in table.Rows)
             {
-                list.Add(new MSSQLTransferItem
+                list.Add(new DGMSSQLTransferItem
                 {
                     Id = row.Field<int>("Id"),
                     Articul = row.Field<string>("Articul") ?? "",
@@ -189,13 +191,13 @@ namespace DrJaw.Utils
             }
             return list;
         }
-        public static List<MSSQLLomItem> ConvertToLomItems(DataTable table)
+        public static List<DGMSSQLLomItem> ConvertToLomItems(DataTable table)
         {
-            var list = new List<MSSQLLomItem>();
+            var list = new List<DGMSSQLLomItem>();
 
             foreach (DataRow row in table.Rows)
             {
-                var item = new MSSQLLomItem
+                var item = new DGMSSQLLomItem
                 {
                     Id = row.Field<int>("Id"),
                     Mart = row.Field<string>("Mart") ?? string.Empty,
@@ -212,6 +214,68 @@ namespace DrJaw.Utils
 
             return list;
         }
+        public static List<DGMSSQLOrders> ConvertToOrders(DataTable table)
+        {
+            var list = new List<DGMSSQLOrders>(table?.Rows.Count ?? 0);
+            if (table == null) return list;
 
+            foreach (DataRow r in table.Rows)
+            {
+                list.Add(new DGMSSQLOrders
+                {
+                    CartId = r.Field<int>("CartId"),
+                    UserId = r.Field<int>("UserId"),
+                    MartId = r.Field<int>("MartId"),
+                    PaymentType = r.Field<string?>("PaymentType") ?? "",
+                    Bonus = r.Field<decimal?>("Bonus"),
+                    TotalPrice = r.Field<decimal?>("TotalPrice"),
+                    PurchaseDate = r.Field<DateTime?>("PurchaseDate"),
+                    LomId = r.Field<int?>("LomId"),
+                    Status = r.Field<string?>("Status") ?? ""
+                });
+            }
+            return list;
+        }
+        public static List<DGMSSQLOrderItem> ConvertToOrderItems(DataTable table)
+        {
+            var list = new List<DGMSSQLOrderItem>(table?.Rows.Count ?? 0);
+            if (table == null) return list;
+
+            foreach (DataRow r in table.Rows)
+            {
+                list.Add(new DGMSSQLOrderItem
+                {
+                    ImageData = r["ImageData"] as byte[],
+                    Articul = r.Field<string?>("Articul") ?? "",
+                    Weight = r.Field<decimal?>("Weight") ?? 0m,
+                    Size = r.Field<string?>("Size") ?? "",
+                    Manufacturer = r.Field<string?>("Manufacturer") ?? "",
+                    Stone = r.Field<string?>("Stone") ?? "",
+                    ItemBonus = r.Field<decimal?>("ItemBonus"),
+                    Comment = r.Field<string?>("Comment") ?? "",
+                    CiStatus = r.Field<string?>("CiStatus") ?? "",
+                });
+            }
+            return list;
+        }
+        public static List<MSSQLOrderTotals> ConvertToOrderTotals(DataTable table)
+        {
+            var list = new List<MSSQLOrderTotals>(table?.Rows.Count ?? 0);
+            if (table == null) return list;
+
+            foreach (DataRow r in table.Rows)
+            {
+                list.Add(new MSSQLOrderTotals
+                {
+                    UserId = r.Field<int>("UserId"),
+                    MartId = r.Field<int>("MartId"),
+                    Metal = r.Field<string?>("Metal") ?? "",
+                    ItemCount = r.Field<int?>("ItemCount") ?? 0,
+                    TotalWeight = r.Field<decimal?>("TotalWeight") ?? 0m,
+                    TotalPrice = r.Field<decimal?>("TotalPrice") ?? 0m
+                });
+            }
+            return list;
+        }
     }
 }

@@ -1,22 +1,17 @@
 ﻿<UserControl x:Class="DrJaw.Views.User.UserPanel"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <!-- Верхние фильтры -->
             <RowDefinition Height="*"/>
-            <!-- Дерево -->
             <RowDefinition Height="Auto"/>
-            <!-- Нижние кнопки -->
             <RowDefinition Height="Auto"/>
-            <!-- Нижняя инфа -->
         </Grid.RowDefinitions>
 
-        <!-- ВЕРХ: Label + ComboBox + Label + ComboBox + Button -->
         <Grid Grid.Row="0" Margin="0 0 0 10">
             <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
@@ -24,163 +19,38 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
-            <Label Content="Магазин" VerticalAlignment="Center" Grid.Column="0" Margin="0 0 5 0"/>
-            <ComboBox x:Name="comboBoxMart" Grid.Column="1" Style="{StaticResource MaterialDesignComboBox}" DisplayMemberPath="Name" SelectedValuePath="Id" Margin="10,0,0,0" HorizontalAlignment="Left" Width="134" SelectionChanged="comboBoxMart_SelectionChanged"/>
+            <Label Content="Магазин" VerticalAlignment="Center" Grid.Column="0" />
+            <ComboBox x:Name="comboBoxMart" Grid.Column="1" DisplayMemberPath="Name" SelectedValuePath="Id" HorizontalAlignment="Left" SelectionChanged="comboBoxMart_SelectionChanged"/>
 
-            <Label Content="Металл" VerticalAlignment="Center" Grid.Column="1" Margin="149,0,130,0"/>
-            <ComboBox x:Name="comboBoxMetal" Width="100" Grid.Column="1" Style="{StaticResource MaterialDesignComboBox}" DisplayMemberPath="Name" SelectedValuePath="Id" Margin="202,0,28,0" SelectionChanged="comboBoxMetal_SelectionChanged"/>
+            <Label Content="Металл" VerticalAlignment="Center" Grid.Column="2"/>
+            <ComboBox x:Name="comboBoxMetal" Width="100" Grid.Column="3" DisplayMemberPath="Name" SelectedValuePath="Id" SelectionChanged="comboBoxMetal_SelectionChanged"/>
 
             <Button x:Name="RefreshButton" Content="Обновить список" 
                     Grid.Column="6" 
                     HorizontalAlignment="Right" 
-                    Padding="16,6"
-                    Background="White"
-                    Foreground="Black"
-                    BorderBrush="Gray"
-                    MinWidth="100"
-                    Style="{StaticResource MaterialDesignOutlinedButton}" 
-                    FontWeight="Bold"
                     Click="RefreshButton_Click"/>
         </Grid>
 
-        <!-- ЦЕНТР: дерево -->
         <DataGrid x:Name="DataGridItems" 
-          Style="{StaticResource MaterialDesignDataGrid}" 
           Grid.Row="1" 
-          AutoGenerateColumns="False"
-          IsReadOnly="True"
-          RowHeight="40">
+          AutoGenerateColumns="True"
+          IsReadOnly="True">
             <DataGrid.CellStyle>
                 <Style TargetType="DataGridCell">
                     <Setter Property="VerticalContentAlignment" Value="Center"/>
                     <Setter Property="HorizontalContentAlignment" Value="Left"/>
-                    <!-- или Center -->
                 </Style>
             </DataGrid.CellStyle>
 
             <DataGrid.ColumnHeaderStyle>
                 <Style TargetType="DataGridColumnHeader">
-                    <Setter Property="FontSize" Value="16"/>
-                    <Setter Property="FontFamily" Value="Segoe UI"/>
                     <Setter Property="HorizontalContentAlignment" Value="Center"/>
                     <Setter Property="VerticalContentAlignment" Value="Center"/>
                 </Style>
             </DataGrid.ColumnHeaderStyle>
-
-
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="200">
-                    <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="FontSize" Value="16"/>
-                            <Setter Property="FontFamily" Value="Segoe UI"/>
-                            <Setter Property="VerticalAlignment" Value="Center"/>
-                        </Style>
-                    </DataGridTextColumn.ElementStyle>
-                </DataGridTextColumn>
-
-                <DataGridTextColumn Header="Metal" Binding="{Binding Metal}" Width="200">
-                    <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="FontSize" Value="16"/>
-                            <Setter Property="FontFamily" Value="Segoe UI"/>
-                            <Setter Property="VerticalAlignment" Value="Center"/>
-                        </Style>
-                    </DataGridTextColumn.ElementStyle>
-                </DataGridTextColumn>
-
-                <DataGridTextColumn Header="Articul" Binding="{Binding Articul}" Width="200">
-                    <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="FontSize" Value="16"/>
-                            <Setter Property="FontFamily" Value="Segoe UI"/>
-                            <Setter Property="VerticalAlignment" Value="Center"/>
-                        </Style>
-                    </DataGridTextColumn.ElementStyle>
-                </DataGridTextColumn>
-
-                <DataGridTextColumn Header="Weight" Binding="{Binding Weight, StringFormat=F2}" Width="100">
-                    <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="FontSize" Value="16"/>
-                            <Setter Property="FontFamily" Value="Segoe UI"/>
-                            <Setter Property="VerticalAlignment" Value="Center"/>
-                            <Setter Property="HorizontalAlignment" Value="Center"/>
-                        </Style>
-                    </DataGridTextColumn.ElementStyle>
-                </DataGridTextColumn>
-
-                <DataGridTextColumn Header="ItemCount" Binding="{Binding ItemCount}" Width="100">
-                    <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="FontSize" Value="16"/>
-                            <Setter Property="FontFamily" Value="Segoe UI"/>
-                            <Setter Property="VerticalAlignment" Value="Center"/>
-                            <Setter Property="HorizontalAlignment" Value="Center"/>
-                        </Style>
-                    </DataGridTextColumn.ElementStyle>
-                </DataGridTextColumn>
-                <DataGridTextColumn Header="Size" Binding="{Binding Size, StringFormat=F2}" Width="100">
-                    <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="FontSize" Value="16"/>
-                            <Setter Property="FontFamily" Value="Segoe UI"/>
-                            <Setter Property="VerticalAlignment" Value="Center"/>
-                            <Setter Property="HorizontalAlignment" Value="Center"/>
-                        </Style>
-                    </DataGridTextColumn.ElementStyle>
-                </DataGridTextColumn>
-                <DataGridTextColumn Header="Stones" Binding="{Binding Stones}" Width="200">
-                    <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="FontSize" Value="16"/>
-                            <Setter Property="FontFamily" Value="Segoe UI"/>
-                            <Setter Property="VerticalAlignment" Value="Center"/>
-                        </Style>
-                    </DataGridTextColumn.ElementStyle>
-                </DataGridTextColumn>
-                <DataGridTextColumn Header="Comment" Binding="{Binding Comment}" Width="200">
-                    <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="FontSize" Value="16"/>
-                            <Setter Property="FontFamily" Value="Segoe UI"/>
-                            <Setter Property="VerticalAlignment" Value="Center"/>
-                        </Style>
-                    </DataGridTextColumn.ElementStyle>
-                </DataGridTextColumn>
-                <DataGridTextColumn Header="Price" Binding="{Binding Price, StringFormat=F2}" Width="100">
-                    <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="FontSize" Value="16"/>
-                            <Setter Property="FontFamily" Value="Segoe UI"/>
-                            <Setter Property="VerticalAlignment" Value="Center"/>
-                            <Setter Property="HorizontalAlignment" Value="Center"/>
-                        </Style>
-                    </DataGridTextColumn.ElementStyle>
-                </DataGridTextColumn>
-                <DataGridTextColumn Header="Manufacturer" Binding="{Binding Manufacturer}" Width="200">
-                    <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="FontSize" Value="16"/>
-                            <Setter Property="FontFamily" Value="Segoe UI"/>
-                            <Setter Property="VerticalAlignment" Value="Center"/>
-                        </Style>
-                    </DataGridTextColumn.ElementStyle>
-                </DataGridTextColumn>
-                <DataGridTextColumn Header="mid" Binding="{Binding mid}" Visibility="Collapsed">
-                    <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="FontSize" Value="16"/>
-                            <Setter Property="FontFamily" Value="Segoe UI"/>
-                            <Setter Property="VerticalAlignment" Value="Center"/>
-                        </Style>
-                    </DataGridTextColumn.ElementStyle>
-                </DataGridTextColumn>
-
-            </DataGrid.Columns>
         </DataGrid>
 
-        <Grid Grid.Row="2" Margin="0 10">
+        <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="*" />
@@ -196,108 +66,44 @@
             <Button 
                 Grid.Column="0" 
                     Content="Добавить" 
-                    Padding="16,6"                     
-                    Background="White"
-                    Foreground="Black"
-                    BorderBrush="Gray"
-                    MinWidth="100"
-                    Click="ButtonAddItem_Click"
-                    Style="{StaticResource MaterialDesignOutlinedButton}" 
-                />
+                    Click="ButtonAddItem_Click"/>
             <Button 
                 Grid.Column="1" 
                 Content="Удалить"
-                    Padding="16,6"                     
-                    Background="White"
-                    Foreground="Black"
-                    BorderBrush="Gray"
-                    MinWidth="100"
-                    Click="ButtonDeleteItem_Click"
-                    Style="{StaticResource MaterialDesignOutlinedButton}" 
- />
+                Click="ButtonDeleteItem_Click" />
             <Button 
                 Grid.Column="2" 
                 Content="Отправить"
-                    Padding="16,6"                     
-                    Background="White"
-                    Foreground="Black"
-                    BorderBrush="Gray"
-                    MinWidth="100"
-                    Click="buttonTransferOut_Click"
-                    Style="{StaticResource MaterialDesignOutlinedButton}" 
- />
+                    Click="buttonTransferOut_Click" />
             <Button 
                 Grid.Column="3" 
                 Content="Отгрузка лома"
-                    Padding="16,6"                     
-                    Background="White"
-                    Foreground="Black"
-                    BorderBrush="Gray"
-                    MinWidth="100"
-                    Click="LomOut_Click"
-                    Style="{StaticResource MaterialDesignOutlinedButton}" 
- />
+                    Click="LomOut_Click" />
             <Button 
                 Grid.Column="4" 
                 Content="Покупка лома"
-                    Padding="16,6"                     
-                    Background="White"
-                    Foreground="Black"
-                    BorderBrush="Gray"
-                    MinWidth="100"
-                    Click="LomIn_Click"
-                    Style="{StaticResource MaterialDesignOutlinedButton}" 
- />
+                    Click="LomIn_Click" />
             <Button 
                 Grid.Column="5" 
                 Content="Возврат"
-                    Padding="16,6"                     
-                    Background="White"
-                    Foreground="Black"
-                    BorderBrush="Gray"
-                    MinWidth="100"
-                    Click="buttonReturn_Click"
-                    Style="{StaticResource MaterialDesignOutlinedButton}" 
- />
+                    Click="buttonReturn_Click" />
             <Button 
                 Grid.Column="6" 
                 Content="Отгрузка"
                     x:Name="ButtonTransferIn"
-                    Padding="16,6"                     
-                    Background="White"
-                    Foreground="Black"
-                    BorderBrush="Gray"
-                    MinWidth="100"
-                    Click="buttonTransferIn_Click"
-                    Style="{StaticResource MaterialDesignOutlinedButton}" 
- />
+                    Click="buttonTransferIn_Click" />
             <Button 
                 Grid.Column="7" 
                 Content="Подготовка к продаже"
-                    Padding="16,6"                     
-                    Background="White"
-                    Foreground="Black"
-                    BorderBrush="Gray"
-                    MinWidth="100"
-                    Click="buttonInCart"
-                    Style="{StaticResource MaterialDesignOutlinedButton}" 
- />
+                    Click="buttonInCart" />
             <Button 
                 Grid.Column="8" 
                 Content="Продажа"
                     x:Name="ButtonCart"
-                    Padding="16,6"                     
-                    Background="White"
-                    Foreground="Black"
-                    BorderBrush="Gray"
-                    MinWidth="100"
-                    Click="buttonCart"
-                    Style="{StaticResource MaterialDesignOutlinedButton}" 
- />
+                    Click="buttonCart" />
         </Grid>
 
-        <!-- САМАЯ НИЖНЯЯ ИНФА: выравнивание лево-центр-право -->
-        <Grid Grid.Row="3" Margin="0 10 0 0">
+        <Grid Grid.Row="3">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="*"/>

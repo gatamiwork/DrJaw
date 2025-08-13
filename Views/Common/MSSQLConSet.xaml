@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         Title="Доктор ювелирка" Height="350" Width="550"
-        materialDesign:ColorZoneAssist.Mode="PrimaryDark" WindowStartupLocation="CenterScreen">
+        WindowStartupLocation="CenterScreen">
 
     <Window.InputBindings>
         <KeyBinding Key="Enter" Command="{Binding ConnectCommand}"/>
@@ -22,8 +22,7 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" Text="Настройки подключения MSSQL"
-                   FontSize="18" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+        <TextBlock Grid.Row="0" Text="Настройки подключения MSSQL" HorizontalAlignment="Center"/>
         <!-- Поля блокируются во время подключения -->
         <Grid Grid.Row="1" IsEnabled="{Binding IsNotBusy}">
             <Grid.RowDefinitions>

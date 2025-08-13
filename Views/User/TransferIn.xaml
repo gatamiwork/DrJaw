@@ -15,22 +15,11 @@
         <DataGrid x:Name="DataGridTransfer" 
                   Grid.Row="0"
                   Grid.ColumnSpan="3"
-                  AutoGenerateColumns="False"
+                  AutoGenerateColumns="True"
                   CanUserAddRows="False"
                   CanUserDeleteRows="False"
                   SelectionMode="Single"
-                  Margin="0,0,0,10"
-                  RowHeight="120"
                   MouseDoubleClick="DataGridTransfer_MouseDoubleClick">
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="Id" Binding="{Binding Id}" />
-                <DataGridTextColumn Header="Артикул" Binding="{Binding Articul}" />
-                <DataGridTextColumn Header="Металл" Binding="{Binding Metal}" />
-                <DataGridTextColumn Header="Вес" Binding="{Binding Weight}" />
-                <DataGridTextColumn Header="Размер" Binding="{Binding Size}" />
-                <DataGridTextColumn Header="Камни" Binding="{Binding Stone}" />
-                <DataGridTextColumn Header="Откуда" Binding="{Binding InMartName}" />
-            </DataGrid.Columns>
         </DataGrid>
 
         <Grid Grid.Row="1" Margin="0,5,0,10">

@@ -46,7 +46,7 @@ namespace DrJaw.Views.User
         {
             if (!IsLoaded || LabelTotalPrice == null) return;
 
-            if (CartDataGrid.ItemsSource is not IEnumerable<MSSQLReadyToSold> items)
+            if (CartDataGrid.ItemsSource is not IEnumerable<DGMSSQLReadyToSold> items)
             {
                 LabelTotalPrice.Content = "Итого: 0.00 ₸";
                 return;
@@ -83,7 +83,7 @@ namespace DrJaw.Views.User
                 return;
 
             // Получаем список всех изделий из таблицы
-            var items = CartDataGrid.ItemsSource as IEnumerable<MSSQLReadyToSold>;
+            var items = CartDataGrid.ItemsSource as IEnumerable<DGMSSQLReadyToSold>;
             if (items == null)
             {
                 MessageBox.Show("Корзина пуста.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -110,14 +110,14 @@ namespace DrJaw.Views.User
         }
         private async void buttonRemoveItemInCart(object sender, RoutedEventArgs e)
         {
-            if (sender is Button button && button.Tag is MSSQLReadyToSold item)
+            if (sender is Button button && button.Tag is DGMSSQLReadyToSold item)
             {
                 if (MessageBox.Show("Убрать изделие?", "Подтверждение",
                     MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
 
                 if (await Storage.Repo.SetReadyToSold(item.Id, false))
                 {
-                    if (CartDataGrid.ItemsSource is IList<MSSQLReadyToSold> list)
+                    if (CartDataGrid.ItemsSource is IList<DGMSSQLReadyToSold> list)
                     {
                         list.Remove(item);
                         CartDataGrid.Items.Refresh();
@@ -140,7 +140,7 @@ namespace DrJaw.Views.User
                 return;
             }
 
-            if (CartDataGrid.ItemsSource is not IEnumerable<MSSQLReadyToSold> itemsEnum)
+            if (CartDataGrid.ItemsSource is not IEnumerable<DGMSSQLReadyToSold> itemsEnum)
             {
                 MessageBox.Show("Корзина пуста.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;

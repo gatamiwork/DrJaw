@@ -23,7 +23,7 @@ namespace DrJaw
     public class MSSQLRepository
     {
         // === ITEMS ===
-        public async Task<List<MSSQLItem>> LoadItems(MSSQLMart mart, MSSQLMetal metal)
+        public async Task<List<DGMSSQLItem>> LoadItems(MSSQLMart mart, MSSQLMetal metal)
         {
             string query = @"
                     SELECT Types.Name AS Type, Metals.Name AS Metal, a.Name AS Articul, i.Weight, i.ItemCount, i.Size, 
@@ -48,7 +48,7 @@ namespace DrJaw
             var table = await MSSQLManager.ExecuteQueryAsync(query, parameters);
             return MSSQLConverters.ConvertToItems(table);
         }
-        public async Task<List<MSSQLReadyToSold>> LoadItemsInCart(MSSQLMart mart)
+        public async Task<List<DGMSSQLReadyToSold>> LoadItemsInCart(MSSQLMart mart)
         {
             var query = "SELECT i.Id, ai.Image, a.Name AS Articul, i.Weight, i.Size, i.Price " +
                         "FROM Items AS i " +
@@ -171,7 +171,7 @@ namespace DrJaw
             await MSSQLManager.ExecuteNonQueryAsync(query, parameters);
             return true;
         }
-        public async Task<List<MSSQLTransferItem>> LoadTransferItems(int martId)
+        public async Task<List<DGMSSQLTransferItem>> LoadTransferItems(int martId)
         {
             var query = @"
                     SELECT i.Id AS Id, a.Name AS Articul, Metals.Name AS Metal, i.Weight AS Weight, i.Size AS Size, Stones.Name AS Stone,Marts.Name AS InMartName 
@@ -296,8 +296,6 @@ namespace DrJaw
 
             return ok == 1;
         }
-
-
         public async Task<BitmapImage?> LoadImage(int id)
         {
             string query = @"
@@ -439,12 +437,13 @@ namespace DrJaw
             object? result = await MSSQLManager.ExecuteScalarAsync(query, parameters);
             return Convert.ToInt32(result);
         }
-        public async Task<List<MSSQLCart>> LoadCart(int martId, DateTime periodStart, DateTime periodEnd)
+        public async Task<List<DGMSSQLOrders>> LoadOrder(DateTime periodStart, DateTime periodEnd)
         {
             string query = @"
                 SELECT 
                     c.Id AS CartId,
-                    m.Name AS Mart,
+                    c.MartId AS MartId,
+                    c.UserId AS UserId,
                     pt.Name AS PaymentType,
                     c.Bonus AS Bonus,
                     c.TotalSum AS TotalPrice,
@@ -457,13 +456,12 @@ namespace DrJaw
                         ELSE 'Неизвестно'
                     END AS Status
                 FROM Cart AS c
-                    LEFT JOIN Marts m ON c.MartId = m.Id
                     LEFT JOIN PaymentTypes pt ON c.PaymentTypeId = pt.Id
                     LEFT JOIN Lom l ON c.LomId = l.Id
                     LEFT JOIN CartItems ci ON ci.CartId = c.Id
                     LEFT JOIN Statuses s ON s.Id = ci.StatusId
-                WHERE {0} c.PurchaseDate >= @DateStart AND c.PurchaseDate <= @DateEnd
-                GROUP BY c.Id, m.Name, pt.Name, c.Bonus, c.TotalSum, c.PurchaseDate, l.Id;
+                WHERE c.PurchaseDate >= @DateStart AND c.PurchaseDate <= @DateEnd
+                GROUP BY c.Id, c.UserId, c.MartId, pt.Name, c.Bonus, c.TotalSum, c.PurchaseDate, l.Id;
             ";
             var parameters = new List<SqlParameter>
                 {
@@ -471,61 +469,61 @@ namespace DrJaw
                     new SqlParameter("@DateEnd", SqlDbType.DateTime) { Value = periodEnd },
                 };
 
-            string martCondition = (martId == 0) ? "" : "m.Id = @MartId AND ";
-            query = string.Format(query, martCondition);
-            if (martId > 0)
-            {
-                parameters.Add(new SqlParameter("@MartId", SqlDbType.Int) { Value = martId });
-            }
             var table = await MSSQLManager.ExecuteQueryAsync(query, parameters);
-            return MSSQLConverters.ConvertToCart(table);
+            return MSSQLConverters.ConvertToOrders(table);
         }
-        public async Task<List<MSSQLCartTotals>> LoadCartTotals(int martId, DateTime periodStart, DateTime periodEnd)
+        public async Task<List<DGMSSQLOrderItem>> LoadOrderItems(int cartId)
         {
             string query = @"
-                 SELECT 
-                     u.Name AS UserName,
-                     m.Name AS Metal,
-                     COUNT(i.Id) AS ItemCount,
-                     SUM(i.Weight) AS TotalWeight,
-                     SUM(i.Price) AS TotalPrice
-                 FROM CartItems ci
-                 JOIN Cart c ON ci.CartId = c.Id
-                 JOIN Users u ON u.Id = c.UserId
-                 JOIN Items i ON i.Id = ci.ItemId
-                 JOIN Articuls a ON a.Id = i.ArticulId
-                 JOIN Metals m ON m.Id = a.MetalId
-                 WHERE c.Id IN (
-                     SELECT c.Id
-                     FROM Cart AS c
-                         LEFT JOIN Marts m ON c.MartId = m.Id
-                     WHERE {0} c.PurchaseDate >= @DateStart AND c.PurchaseDate <= @DateEnd
-                 )
-                 GROUP BY u.Name, m.Name
-                 ORDER BY u.Name, m.Name;
-             ";
+                    SELECT ai.Image AS ImageData, a.Name AS Articul, i.Weight AS Weight, i.Size AS Size, 
+                           m.Name AS Manufacturer, s.Name AS Stone, ci.Bonus AS ItemBonus, i.Comment AS Comment,
+                           st.Name AS CiStatus
+                    FROM CartItems ci
+                    LEFT JOIN Items i ON ci.ItemId = i.Id
+                    LEFT JOIN Articuls a ON i.ArticulId = a.Id
+                    LEFT JOIN ArticulImages ai ON i.ArticulId = ai.ArticulId
+                    LEFT JOIN Manufacturers m ON i.ManufacturerId = m.Id
+                    LEFT JOIN Stones s ON i.StonesId = s.Id
+                    LEFT JOIN Statuses st ON ci.StatusId = st.Id
+                    WHERE ci.CartId = @CartId";
+
+            var parameters = new List<SqlParameter>
+                {
+                    new SqlParameter("@CartId", SqlDbType.Int) { Value = cartId }
+                };
+
+            var table = await MSSQLManager.ExecuteQueryAsync(query, parameters);
+            return MSSQLConverters.ConvertToOrderItems(table);
+        }
+        public async Task<List<MSSQLOrderTotals>> LoadOrderTotals(DateTime periodStart, DateTime periodEnd)
+        {
+            const string query = @"
+                SELECT 
+                    u.Id        AS UserId,
+                    c.MartId    AS MartId,
+                    me.Name     AS Metal,
+                    COUNT(*)    AS ItemCount,
+                    SUM(i.Weight) AS TotalWeight,
+                    SUM(i.Price)  AS TotalPrice
+                FROM CartItems ci
+                JOIN Cart      c   ON ci.CartId   = c.Id
+                JOIN Users     u   ON u.Id        = c.UserId
+                JOIN Items     i   ON i.Id        = ci.ItemId
+                JOIN Articuls  a   ON a.Id        = i.ArticulId
+                JOIN Metals    me  ON me.Id       = a.MetalId
+                WHERE c.PurchaseDate >= @DateStart
+                  AND c.PurchaseDate <= @DateEnd
+                GROUP BY u.Id, c.MartId, me.Name
+                ORDER BY u.Id, c.MartId, me.Name;";
             var parameters = new List<SqlParameter>
                     {
                         new SqlParameter("@DateStart", SqlDbType.DateTime) { Value = periodStart },
                         new SqlParameter("@DateEnd", SqlDbType.DateTime) { Value = periodEnd }
                     };
-            string martCondition = (martId == 0) ? "" : "m.Id = @MartId AND ";
-            query = string.Format(query, martCondition);
 
-            if (martId > 0)
-            {
-                parameters.Add(new SqlParameter("@MartId", SqlDbType.Int) { Value = martId });
-            }
             var table = await MSSQLManager.ExecuteQueryAsync(query, parameters);
 
-            return table.AsEnumerable().Select(row => new MSSQLCartTotals
-            {
-                UserName = row["UserName"].ToString() ?? "",
-                Metal = row["Metal"].ToString() ?? "",
-                ItemCount = Convert.ToDecimal(row["ItemCount"]),
-                TotalWeight = Convert.ToDecimal(row["TotalWeight"]),
-                TotalPrice = Convert.ToDecimal(row["TotalPrice"])
-            }).ToList();
+            return MSSQLConverters.ConvertToOrderTotals(table);
         }
         // === CARTITEM ==
         public async Task<bool> CreateCartItem(int cartId, int itemId, decimal itemBonus)
@@ -571,7 +569,7 @@ namespace DrJaw
             var table = await MSSQLManager.ExecuteQueryAsync(query, parameters);
             return MSSQLConverters.ConvertToCartItems(table);
         }
-        public async Task<List<MSSQLReturnCartItem>> LoadReturnCartItems(int martId, DateTime dateStart, DateTime dateEnd)
+        public async Task<List<DGMSSQLReturnCartItem>> LoadReturnCartItems(int martId, DateTime dateStart, DateTime dateEnd)
         {
             string query = @"
             SELECT 
@@ -603,7 +601,7 @@ namespace DrJaw
             };
             var table = await MSSQLManager.ExecuteQueryAsync(query, parameters);
 
-            return table.AsEnumerable().Select(row => new MSSQLReturnCartItem
+            return table.AsEnumerable().Select(row => new DGMSSQLReturnCartItem
             {
                 Id = Convert.ToInt32(row["Id"]),
                 Articul = row["Articul"]?.ToString() ?? "",
@@ -643,39 +641,50 @@ namespace DrJaw
         }
         public async Task<List<MSSQLLomTotals>> LoadLomTotals(DateTime dateStart, DateTime dateEnd)
         {
-            string query = @"
+            const string sql = @"
+            ;WITH src AS (
                 SELECT
                     l.MartId,
-                    SUM(CASE WHEN l.CreatedAt < @DateStart THEN CASE WHEN l.Receiving = 1 THEN l.Weight ELSE -l.Weight END ELSE 0 END) AS StartWeight,
-                    SUM(CASE WHEN l.CreatedAt < @DateStart THEN CASE WHEN l.Receiving = 1 THEN l.Weight * ISNULL(l.PricePerGram, 0) ELSE -l.Weight * ISNULL(l.PricePerGram, 0) END ELSE 0 END) AS StartPrice,
-
-                    SUM(CASE WHEN l.CreatedAt BETWEEN @DateStart AND @DateEnd THEN CASE WHEN l.Receiving = 1 THEN l.Weight ELSE -l.Weight END ELSE 0 END) AS CurrentWeight,
-                    SUM(CASE WHEN l.CreatedAt BETWEEN @DateStart AND @DateEnd THEN CASE WHEN l.Receiving = 1 THEN l.Weight * ISNULL(l.PricePerGram, 0) ELSE -l.Weight * ISNULL(l.PricePerGram, 0) END ELSE 0 END) AS CurrentPrice,
-
-                    SUM(CASE WHEN l.CreatedAt <= @DateEnd THEN CASE WHEN l.Receiving = 1 THEN l.Weight ELSE -l.Weight END ELSE 0 END) AS EndWeight,
-                    SUM(CASE WHEN l.CreatedAt <= @DateEnd THEN CASE WHEN l.Receiving = 1 THEN l.Weight * ISNULL(l.PricePerGram, 0) ELSE -l.Weight * ISNULL(l.PricePerGram, 0) END ELSE 0 END) AS EndPrice
-                FROM Lom AS l
-                GROUP BY l.MartId;";
+                    l.CreatedAt,
+                    CASE WHEN l.Receiving = 1 THEN l.Weight ELSE -l.Weight END                             AS sw,
+                    CASE WHEN l.Receiving = 1 THEN l.Weight * ISNULL(l.PricePerGram, 0)
+                                               ELSE -l.Weight * ISNULL(l.PricePerGram, 0) END              AS sp
+                FROM Lom l
+                WHERE l.CreatedAt <= @DateEnd
+            )
+            SELECT
+                MartId,
+                COALESCE(SUM(CASE WHEN CreatedAt <  @DateStart THEN sw END), 0) AS StartWeight,
+                COALESCE(SUM(CASE WHEN CreatedAt <  @DateStart THEN sp END), 0) AS StartPrice,
+                COALESCE(SUM(CASE WHEN CreatedAt BETWEEN @DateStart AND @DateEnd THEN sw END), 0) AS CurrentWeight,
+                COALESCE(SUM(CASE WHEN CreatedAt BETWEEN @DateStart AND @DateEnd THEN sp END), 0) AS CurrentPrice,
+                COALESCE(SUM(sw), 0) AS EndWeight,
+                COALESCE(SUM(sp), 0) AS EndPrice
+            FROM src
+            GROUP BY MartId;";
 
             var parameters = new List<SqlParameter>
-                {
-                    new SqlParameter("@DateStart", SqlDbType.DateTime) { Value = dateStart },
-                    new SqlParameter("@DateEnd", SqlDbType.DateTime) { Value = dateEnd },
-                };
+    {
+        new("@DateStart", SqlDbType.DateTime2) { Value = dateStart },
+        new("@DateEnd",   SqlDbType.DateTime2) { Value = dateEnd   },
+    };
 
-            var table =  await MSSQLManager.ExecuteQueryAsync(query, parameters);
-            return table.AsEnumerable().Select(row => new MSSQLLomTotals
-            {
-                MartId = Convert.ToInt32(row["MartId"]),
-                StartWeight = Convert.ToDecimal(row["StartWeight"]),
-                StartPrice = Convert.ToDecimal(row["StartPrice"]),
-                CurrentWeight = Convert.ToDecimal(row["CurrentWeight"]),
-                CurrentPrice = Convert.ToDecimal(row["CurrentPrice"]),
-                EndWeight = Convert.ToDecimal(row["EndWeight"]),
-                EndPrice = Convert.ToDecimal(row["EndPrice"])
-            }).ToList();
+            var table = await MSSQLManager.ExecuteQueryAsync(sql, parameters);
+
+            return table.AsEnumerable()
+                .Select(row => new MSSQLLomTotals
+                {
+                    MartId = row.Field<int>("MartId"),
+                    StartWeight = row.Field<decimal?>("StartWeight") ?? 0m,
+                    StartPrice = row.Field<decimal?>("StartPrice") ?? 0m,
+                    CurrentWeight = row.Field<decimal?>("CurrentWeight") ?? 0m,
+                    CurrentPrice = row.Field<decimal?>("CurrentPrice") ?? 0m,
+                    EndWeight = row.Field<decimal?>("EndWeight") ?? 0m,
+                    EndPrice = row.Field<decimal?>("EndPrice") ?? 0m,
+                })
+                .ToList();
         }
-        public async Task<List<MSSQLLomItem>> LoadLom(DateTime dateStart, DateTime dateEnd)
+        public async Task<List<DGMSSQLLomItem>> LoadLom(DateTime dateStart, DateTime dateEnd)
         {
             string query = @"
                     SELECT l.Id AS Id, m.Name AS Mart, l.Weight, l.PricePerGram, l.Receiving, u.Name AS UserName, l.CreatedAt, c.Id AS CartId
