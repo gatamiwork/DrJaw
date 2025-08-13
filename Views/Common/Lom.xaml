@@ -1,0 +1,67 @@
+﻿<Window x:Class="DrJaw.Views.Common.Lom"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Lom" Height="450" Width="800">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <!-- Верхние фильтры -->
+            <RowDefinition Height="*"/>
+            <!-- Таблица -->
+            <RowDefinition Height="Auto"/>
+            <!-- Нижняя инфа -->
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Верхние фильтры -->
+        <Grid Grid.Row="0" Grid.ColumnSpan="3" >
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Дата с -->
+            <Label Grid.Column="0" Content="Период с:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+            <DatePicker Grid.Column="1" x:Name="DateFrom" SelectedDateChanged="Date_SelectedDateChanged"/>
+
+            <!-- Дата по -->
+            <Label Grid.Column="2" Content="по:" VerticalAlignment="Center" Margin="15,0,5,0"/>
+            <DatePicker Grid.Column="3" x:Name="DateTo" SelectedDateChanged="Date_SelectedDateChanged"/>
+
+            <!-- Маркет -->
+            <ComboBox Grid.Column="4" x:Name="ComboBoxMart" Width="150" DisplayMemberPath="Name" SelectedValuePath="Id" SelectionChanged="ComboBox_SelectionChanged"/>
+            <ComboBox Grid.Column="5" x:Name="ComboBoxUser" Width="150" DisplayMemberPath="Name" SelectedValuePath="Id" SelectionChanged="ComboBox_SelectionChanged"/>
+        </Grid>
+
+        <!-- Таблица -->
+        <DataGrid Grid.Row="1" 
+                  Grid.ColumnSpan="6" 
+                  x:Name="DataGridLom" 
+                  AutoGenerateColumns="True"
+                  IsReadOnly="True">
+        </DataGrid>
+
+        <!-- Нижняя инфа -->
+        <Label Grid.Row="2" Grid.Column="0" Content="Итог на начало периода:"/>
+        <Label Grid.Row="2" Grid.Column="1" Content="Итог на текущий период:"/>
+        <Label Grid.Row="2" Grid.Column="2" Content="Итог на конец периода:"/>
+
+        <Label x:Name="labelTotalWeightStart" Grid.Row="3" Grid.Column="0" Content="Вес: 0"/>
+        <Label x:Name="labelCurrentWeight" Grid.Row="3" Grid.Column="1" Content="Вес: 0"/>
+        <Label x:Name="labelTotalWeightEnd" Grid.Row="3" Grid.Column="2" Content="Вес: 0"/>
+
+        <Label x:Name="labelTotalPriceStart" Grid.Row="4" Grid.Column="0" Content="Цена: 0"/>
+        <Label x:Name="labelCurrentPrice" Grid.Row="4" Grid.Column="1" Content="Цена: 0"/>
+        <Label x:Name="labelTotalPriceEnd" Grid.Row="4" Grid.Column="2" Content="Цена: 0"/>
+    </Grid>
+</Window>

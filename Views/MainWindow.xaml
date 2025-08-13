@@ -1,0 +1,20 @@
+﻿<Window x:Class="DrJaw.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:local="clr-namespace:DrJaw.Views.Controls"
+        Title="{Binding WindowTitle}"
+        KeyDown="Window_KeyDown"
+        Height="768" Width="1024"
+        WindowStartupLocation="CenterScreen">
+
+    <DockPanel>
+        <local:MainMenu DockPanel.Dock="Top" />
+
+        <StatusBar DockPanel.Dock="Bottom" FontSize="14">
+            <StatusBarItem Content="Статус: Готов" />
+        </StatusBar>
+
+        <ContentControl x:Name="RoleContent" />
+    </DockPanel>
+</Window>

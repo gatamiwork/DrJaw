@@ -1,0 +1,73 @@
+﻿<Window x:Class="DrJaw.Views.User.AddItem"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Добавление изделия"
+        Height="554" Width="807"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen">
+    <Grid Margin="10">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="180"/>
+            <ColumnDefinition Width="19*"/>
+            <ColumnDefinition Width="131*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Левая часть с изображением -->
+        <StackPanel Grid.Column="0" Margin="0,0,10,0">
+            <Border BorderBrush="Gray" BorderThickness="1">
+                <Image x:Name="ImagePreview" Stretch="Uniform" Height="160" />
+            </Border>
+            <Button x:Name="ButtonAddImage" Content="Добавить изображение" Click="ButtonAddImage_Click"/>
+        </StackPanel>
+
+        <!-- Правая часть -->
+        <StackPanel Grid.Column="1" VerticalAlignment="Top" Grid.ColumnSpan="2">
+            <Grid Margin="0,0,0,10">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Label Grid.Row="0" Grid.Column="0" Content="Артикул:" Margin="0,0,10,5" VerticalAlignment="Center"/>
+                <TextBox x:Name="TextBoxArticul" Grid.Row="0" Grid.Column="1" Margin="0,0,0,5" TextChanged ="TextBoxArticul_TextChanged"/>
+
+                <Label Grid.Row="1" Grid.Column="0" Content="Тип изделия:" Margin="0,0,10,5" VerticalAlignment="Center"/>
+                <ComboBox x:Name="ComboBoxType" Grid.Row="1" Grid.Column="1" Margin="0,0,0,5" DisplayMemberPath="Name" SelectedValuePath="Id"/>
+
+                <Label Grid.Row="2" Grid.Column="0" Content="Металл:" Margin="0,0,10,5" VerticalAlignment="Center"/>
+                <ComboBox x:Name="ComboBoxMetal" Grid.Row="2" Grid.Column="1" Margin="0,0,0,5" DisplayMemberPath="Name" SelectedValuePath="Id"/>
+
+                <Label Grid.Row="3" Grid.Column="0" Content="Вес:" Margin="0,0,10,5" VerticalAlignment="Center"/>
+                <TextBox x:Name="TextBoxWeight" Grid.Row="3" Grid.Column="1" Margin="0,0,0,5"/>
+
+                <Label Grid.Row="4" Grid.Column="0" Content="Размер:" Margin="0,0,10,5" VerticalAlignment="Center"/>
+                <TextBox x:Name="TextBoxSize" Grid.Row="4" Grid.Column="1" Margin="0,0,0,5"/>
+
+                <Label Grid.Row="5" Grid.Column="0" Content="Вставки:" Margin="0,0,10,5" VerticalAlignment="Center"/>
+                <ComboBox x:Name="ComboBoxStone" Grid.Row="5" Grid.Column="1" Margin="0,0,0,5" DisplayMemberPath="Name" SelectedValuePath="Id"/>
+
+                <Label Grid.Row="6" Grid.Column="0" Content="Производитель:" Margin="0,0,10,5" VerticalAlignment="Center"/>
+                <ComboBox x:Name="ComboBoxManufacturer" Grid.Row="6" Grid.Column="1" Margin="0,0,0,5" DisplayMemberPath="Name" SelectedValuePath="Id"/>
+
+                <Label Grid.Row="7" Grid.Column="0" Content="Стоимость:" Margin="0,0,10,5" VerticalAlignment="Center"/>
+                <TextBox x:Name="TextBoxPrice" Grid.Row="7" Grid.Column="1" Margin="0,0,0,5"/>
+
+                <Label Grid.Row="8" Grid.Column="0" Content="Примечание:" Margin="0,0,10,5" VerticalAlignment="Top"/>
+                <TextBox x:Name="TextBoxComment" Grid.Row="8" Grid.Column="1" Margin="0,0,0,5" Height="80" TextWrapping="Wrap" AcceptsReturn="True"/>
+            </Grid>
+
+            <Button x:Name="ButtonAdd" Content="Добавить" HorizontalAlignment="Right" Click="ButtonAdd_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>
