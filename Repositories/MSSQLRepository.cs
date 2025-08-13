@@ -243,7 +243,7 @@ namespace DrJaw
           {
               new("@ArticulId", SqlDbType.Int)     { Value = articulId },
               new("@Weight", SqlDbType.Decimal)    { Value = weight },
-              new("@Size", SqlDbType.NVarChar)     { Value = size },
+              new("@Size", SqlDbType.Decimal)     { Value = size },
               new("@MartId", SqlDbType.Int)        { Value = Storage.CurrentMart?.Id },
               new("@ManufacturerId", SqlDbType.Int){ Value = manufacturerId },
               new("@Price", SqlDbType.Decimal)     { Value = price },

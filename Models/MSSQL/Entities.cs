@@ -116,7 +116,7 @@
         public int Id { get; set; }
         public int ArticulId { get; set; }
         public decimal Weight { get; set; }          // DECIMAL(10,2)
-        public string Size { get; set; } = "";
+        public decimal Size { get; set; }
         public int MartId { get; set; }
         public int? ManufacturerId { get; set; }
         public decimal Price { get; set; }           // DECIMAL(18,2)
