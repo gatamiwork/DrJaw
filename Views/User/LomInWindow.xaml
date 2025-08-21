@@ -1,0 +1,47 @@
+﻿<Window x:Class="DrJaw.Views.User.LomInWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:helpers="clr-namespace:DrJaw.Helpers"
+        Title="Приём лома"
+        Height="220" Width="460"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize">
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="8"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="8"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="160"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Вес -->
+        <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,12,0" Text="Вес, грамм:"/>
+        <TextBox  Grid.Row="0" Grid.Column="1"
+                  helpers:NumericInput.DecimalOnly="True"
+                  helpers:NumericInput.MaxDecimalPlaces="2"
+                  Text="{Binding Weight, UpdateSourceTrigger=PropertyChanged}"
+                  Width="200" HorizontalAlignment="Left"/>
+
+        <!-- Цена за грамм -->
+        <TextBlock Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,12,0" Text="Цена за грамм:"/>
+        <TextBox  Grid.Row="2" Grid.Column="1"
+                  helpers:NumericInput.DecimalOnly="True"
+                  helpers:NumericInput.MaxDecimalPlaces="2"
+                  Text="{Binding PricePerGram, UpdateSourceTrigger=PropertyChanged}"
+                  Width="200" HorizontalAlignment="Left"/>
+
+        <!-- Итог -->
+        <StackPanel Grid.Row="4" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right">
+            <TextBlock Text="{Binding TotalText}" VerticalAlignment="Center" Margin="0,0,12,0" Foreground="#555"/>
+            <Button Content="Принять" Width="120" Height="32" Margin="0,0,8,0"
+                    IsDefault="True" Command="{Binding SaveCommand}"/>
+            <Button Content="Отмена" Width="100" Height="32"
+                    IsCancel="True" Command="{Binding CancelCommand}"/>
+        </StackPanel>
+    </Grid>
+</Window>

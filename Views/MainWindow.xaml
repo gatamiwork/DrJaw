@@ -2,19 +2,66 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-        xmlns:local="clr-namespace:DrJaw.Views.Controls"
-        Title="{Binding WindowTitle}"
-        KeyDown="Window_KeyDown"
-        Height="768" Width="1024"
+        Title="{Binding WindowTitle}" Height="600" Width="900"
         WindowStartupLocation="CenterScreen">
+    <Window.Resources>
+        <Style TargetType="{x:Type Menu}">
+            <Setter Property="FontSize" Value="13"/>
+        </Style>
 
-    <DockPanel>
-        <local:MainMenu DockPanel.Dock="Top" />
+        <Style TargetType="{x:Type MenuItem}">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Padding" Value="8,4"/>
+            <Setter Property="MinHeight" Value="28"/>
+        </Style>
+    </Window.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Menu Grid.Column="0">
+                <MenuItem Header="Лом"
+                          Command="{Binding OpenLomCommand}"
+                    Visibility="{Binding CurrentRole,
+                                 Converter={StaticResource RoleToVis},
+                                 ConverterParameter='USER,ADMIN'}"/>
+                <MenuItem Header="Покупки"
+                          Command="{Binding OpenOrdersCommand}"
+            Visibility="{Binding CurrentRole,
+                                 Converter={StaticResource RoleToVis},
+                                 ConverterParameter='USER,ADMIN'}"/>
+                <MenuItem Header="_Настройки"  
+                          Command="{Binding OpenSettingsCommand}"
+            Visibility="{Binding CurrentRole,
+                                   Converter={StaticResource RoleToVis},
+                                   ConverterParameter='ADMIN'}"/>
+                <MenuItem Header="Woo"
+                          Command="{Binding OpenWooCommand}"
+            Visibility="{Binding CurrentRole,
+                                 Converter={StaticResource RoleToVis},
+                                 ConverterParameter='CLOUD,ADMIN'}"/>
+            </Menu>
+            <Menu Grid.Column="1" HorizontalAlignment="Right">
+                <MenuItem Header="Сменить пользователя"
+                  Command="{Binding ChangeUserCommand}"/>
+            </Menu>
+        </Grid>
 
-        <StatusBar DockPanel.Dock="Bottom" FontSize="14">
-            <StatusBarItem Content="Статус: Готов" />
+        <ContentControl Grid.Row="1"
+                        Content="{Binding RolePanelVm}"
+                        Margin="8,6,8,6"/>
+
+        <StatusBar Grid.Row="2">
+            <StatusBarItem>
+                <TextBlock Text="{Binding StatusBar}"/>
+            </StatusBarItem>
         </StatusBar>
-
-        <ContentControl x:Name="RoleContent" />
-    </DockPanel>
+    </Grid>
 </Window>

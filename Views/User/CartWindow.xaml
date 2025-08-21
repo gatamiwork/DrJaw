@@ -1,0 +1,248 @@
+﻿<Window x:Class="DrJaw.Views.User.CartWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:helpers="clr-namespace:DrJaw.Helpers"
+        Title="Корзина"
+        Height="560" Width="950"
+        WindowStartupLocation="CenterOwner">
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <!-- ВЕРХ: кнопки -->
+            <RowDefinition Height="*"/>
+            <!-- Список -->
+            <RowDefinition Height="Auto"/>
+            <!-- Низ: итоги/контролы -->
+        </Grid.RowDefinitions>
+
+        <!-- ВЕРХ: Отмена заказа + Закрыть (справа) -->
+        <DockPanel Grid.Row="0" LastChildFill="False" Margin="0,0,0,8">
+            <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
+                <Button Content="Отмена заказа"
+              MinWidth="140" Height="32" Margin="0,0,8,0"
+              Command="{Binding CancelOrderCommand}"/>
+            </StackPanel>
+        </DockPanel>
+
+        <!-- Список карточек -->
+        <ListView Grid.Row="1"
+              ItemsSource="{Binding Items}"
+              BorderThickness="0"
+              VirtualizingPanel.IsVirtualizing="True"
+              VirtualizingPanel.VirtualizationMode="Recycling"
+              VirtualizingPanel.ScrollUnit="Pixel"
+              ScrollViewer.CanContentScroll="True">
+            <ListView.ItemContainerStyle>
+                <Style TargetType="ListViewItem">
+                    <Setter Property="Padding" Value="0"/>
+                    <Setter Property="Margin"  Value="0,6"/>
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                    <Setter Property="VerticalContentAlignment"   Value="Center"/>
+                </Style>
+            </ListView.ItemContainerStyle>
+
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <Border CornerRadius="8"
+                  Background="#FFFFFF"
+                  BorderBrush="#E5E5E5"
+                  BorderThickness="1"
+                  Padding="12">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="108"/>
+                                <ColumnDefinition Width="16"/>
+                                <ColumnDefinition Width="*"/>
+                                <!-- детали (середина) -->
+                                <ColumnDefinition Width="16"/>
+                                <ColumnDefinition Width="*"/>
+                                <!-- БЫЛО 320 → сделаем растягиваемым -->
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Превью -->
+                            <Border Grid.Column="0" Width="96" Height="96" Background="#FAFAFA" CornerRadius="6">
+                                <Grid>
+                                    <Image Source="{Binding Thumbnail}"
+                         Stretch="Uniform"
+                         HorizontalAlignment="Center"
+                         VerticalAlignment="Center"
+                         RenderOptions.BitmapScalingMode="HighQuality"
+                         SnapsToDevicePixels="True"/>
+                                    <TextBlock Text="Нет изображения"
+                             Foreground="#888" FontSize="12"
+                             HorizontalAlignment="Center"
+                             VerticalAlignment="Center">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Thumbnail}" Value="{x:Null}">
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Grid>
+                            </Border>
+
+                            <!-- Детали -->
+                            <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding Articul}"
+               FontSize="16"
+               FontWeight="SemiBold"
+               TextTrimming="CharacterEllipsis"/>
+
+                                <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                    <TextBlock Text="Размер: " Foreground="#666"/>
+                                    <TextBlock Text="{Binding Size}" Foreground="#666" TextTrimming="CharacterEllipsis"/>
+
+                                    <TextBlock Text="  •  " Foreground="#AAA" Margin="4,0"/>
+
+                                    <TextBlock Text="Вес: " Foreground="#666"/>
+                                    <TextBlock Text="{Binding Weight, StringFormat={}{0:N3}}"
+                   Foreground="#666"/>
+
+                                    <TextBlock Text="  •  " Foreground="#AAA" Margin="4,0"/>
+
+                                    <TextBlock Text="Вставки: " Foreground="#666"/>
+                                    <TextBlock Text="{Binding Stones}" Foreground="#666" TextTrimming="CharacterEllipsis"/>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <!-- Цена → Бонус → Итог → Убрать -->
+                            <Grid Grid.Column="4" VerticalAlignment="Center">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <!-- Цена -->
+                                    <ColumnDefinition Width="16"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <!-- Бонус -->
+                                    <ColumnDefinition Width="16"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <!-- Итог -->
+                                    <ColumnDefinition Width="*"/>
+                                    <!-- Spacer -->
+                                    <ColumnDefinition Width="120"/>
+                                    <!-- Кнопка -->
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Цена за шт. -->
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                    <TextBlock Text="Цена за шт." Foreground="#666"/>
+                                    <TextBlock Text="{Binding Price, StringFormat={}{0:N2}}"
+                   FontSize="14" FontWeight="SemiBold"/>
+                                </StackPanel>
+
+                                <!-- Бонус (%) -->
+                                <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                    <TextBlock Text="Бонус (% за шт.)" Foreground="#666"/>
+                                    <ComboBox Width="120"
+                  ItemsSource="{Binding BonusOptions}"
+                  SelectedItem="{Binding SelectedBonusPercent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding StringFormat={}{0}%}"/>
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
+                                </StackPanel>
+
+                                <!-- Итог -->
+                                <StackPanel Grid.Column="4" VerticalAlignment="Center">
+                                    <TextBlock Text="Итог" Foreground="#666"/>
+                                    <TextBlock Text="{Binding LineTotal, StringFormat={}{0:N2}}"
+                   FontSize="14" FontWeight="SemiBold"/>
+                                    <TextBlock Text="{Binding BonusPerUnit, StringFormat=Скидка: {0:N2}}"
+                   Foreground="#888"/>
+                                </StackPanel>
+
+                                <!-- Убрать -->
+                                <Button Grid.Column="6"
+            Content="Убрать"
+            MinWidth="120" Height="32"
+            Command="{Binding RemoveCommand}"/>
+                            </Grid>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+
+        <!-- НИЖНЯЯ ПАНЕЛЬ -->
+        <Grid Grid.Row="2" Margin="0,12,0,0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <!-- row 0 -->
+                <RowDefinition Height="Auto"/>
+                <!-- row 1 -->
+                <RowDefinition Height="Auto"/>
+                <!-- row 2 -->
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <!-- col 0 -->
+                <ColumnDefinition Width="*"/>
+                <!-- col 1 -->
+                <ColumnDefinition Width="Auto"/>
+                <!-- col 2 -->
+                <ColumnDefinition Width="Auto"/>
+                <!-- col 3 (правая) -->
+            </Grid.ColumnDefinitions>
+
+            <!-- row 0, col 0..1: Добавить/Убрать лом + статус -->
+            <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
+              Orientation="Horizontal" VerticalAlignment="Center">
+                <Button Content="Добавить лом" MinWidth="120" Height="32"
+            Command="{Binding AddLomCommand}"
+                        IsEnabled="False"/>
+                <Button Content="Убрать лом" MinWidth="120" Height="32" Margin="8,0,0,0"
+            Command="{Binding RemoveLomCommand}"
+                        IsEnabled="False"/>
+                <TextBlock Text="{Binding StatusText}" Margin="12,0,0,0"
+               VerticalAlignment="Center" Foreground="#666"/>
+            </StackPanel>
+
+            <!-- row 1, col 0: общий Bonus -->
+            <StackPanel Grid.Row="1" Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Text="Bonus:" Margin="0,0,6,0" VerticalAlignment="Center" Foreground="#666"/>
+                <ComboBox Width="80"
+              ItemsSource="{Binding GlobalBonusOptions}"
+              SelectedItem="{Binding SelectedGlobalBonusPercent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding StringFormat={}{0}%}"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </StackPanel>
+
+            <!-- row 2, col 0: тип оплаты -->
+            <StackPanel Grid.Row="2" Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Text="Оплата:" Margin="0,0,6,0" VerticalAlignment="Center" Foreground="#666"/>
+                <ComboBox Width="180"
+              ItemsSource="{Binding PaymentTypes}"
+              SelectedItem="{Binding SelectedPaymentType, Mode=TwoWay}"
+              DisplayMemberPath="Name"/>
+            </StackPanel>
+
+            <!-- row 1..2, col 1: крупный итог -->
+            <StackPanel Grid.Row="1" Grid.Column="1" Grid.RowSpan="2"
+              Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Text="Итого:" FontSize="20" FontWeight="Bold"
+               VerticalAlignment="Center" Margin="0,0,8,0"/>
+                <TextBlock Text="{Binding TotalSum, StringFormat={}{0:N2}}"
+               FontSize="24" FontWeight="Bold" VerticalAlignment="Center"/>
+            </StackPanel>
+
+            <!-- row 0..2, col 3: большая кнопка ОПЛАТИТЬ -->
+            <Button Grid.Row="0" Grid.RowSpan="3" Grid.Column="3"
+          MinWidth="140" Height="56" Margin="12,0,0,0"
+          FontSize="16" FontWeight="SemiBold"
+          VerticalAlignment="Center"
+          Command="{Binding PayCommand}">
+                Оплатить
+            </Button>
+        </Grid>
+    </Grid>
+</Window>

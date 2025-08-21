@@ -1,0 +1,146 @@
+﻿<Window x:Class="DrJaw.Views.Common.LomWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Отчёт по лому" Height="620" Width="1000"
+        WindowStartupLocation="CenterOwner">
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <!-- фильтры -->
+            <RowDefinition Height="*"/>
+            <!-- таблица -->
+            <RowDefinition Height="Auto"/>
+            <!-- итоги -->
+        </Grid.RowDefinitions>
+
+        <!-- Верх: фильтры -->
+        <Grid Grid.Row="0" Margin="0,0,0,12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="160"/>
+                <ColumnDefinition Width="12"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="160"/>
+                <ColumnDefinition Width="24"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="220"/>
+                <ColumnDefinition Width="12"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="220"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Column="0" Text="Период с:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+            <DatePicker Grid.Column="1"
+                        SelectedDate="{Binding FromDate, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+            <TextBlock Grid.Column="3" Text="по:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+            <DatePicker Grid.Column="4"
+                        SelectedDate="{Binding ToDate, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+            <TextBlock Grid.Column="6" Text="Магазин:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+            <ComboBox  Grid.Column="7"
+                       ItemsSource="{Binding Marts}"
+                       SelectedItem="{Binding SelectedMart, Mode=TwoWay}"
+                       DisplayMemberPath="Name"
+                       MinWidth="100"/>
+
+            <TextBlock Grid.Column="9" Text="Пользователь:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+            <ComboBox  Grid.Column="10"
+                       ItemsSource="{Binding Users}"
+                       SelectedItem="{Binding SelectedUser, Mode=TwoWay}"
+                       DisplayMemberPath="Name"
+                       MinWidth="100"/>
+        </Grid>
+
+        <!-- Центр: таблица -->
+        <DataGrid Grid.Row="1"
+                  ItemsSource="{Binding Rows}"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  CanUserAddRows="False"
+                  CanUserDeleteRows="False"
+                  EnableRowVirtualization="True"
+                  EnableColumnVirtualization="True"
+                  VirtualizingPanel.IsVirtualizing="True"
+                  VirtualizingPanel.VirtualizationMode="Recycling"
+                  VirtualizingPanel.ScrollUnit="Pixel">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Дата"
+                                    Binding="{Binding Date, StringFormat=\{0:yyyy-MM-dd\}}"
+                                    Width="110"/>
+                <DataGridTextColumn Header="Операция"
+                                    Binding="{Binding DirectionText}"
+                                    Width="120"/>
+                <DataGridTextColumn Header="Вес"
+                                    Binding="{Binding Weight, StringFormat=N3}"
+                                    Width="100"/>
+                <DataGridTextColumn Header="Цена/г"
+                                    Binding="{Binding PricePerGram, StringFormat=N2}"
+                                    Width="100"/>
+                <DataGridTextColumn Header="Сумма"
+                                    Binding="{Binding Amount, StringFormat=N2}"
+                                    Width="120"/>
+                <DataGridTextColumn Header="Пользователь"
+                                    Binding="{Binding UserName}"
+                                    Width="*"/>
+                <DataGridTextColumn Header="Комментарий"
+                                    Binding="{Binding Comment}"
+                                    Width="2*"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <!-- Низ: итоги -->
+        <Border Grid.Row="2" Margin="0,12,0,0"
+                Padding="12" CornerRadius="8"
+                BorderBrush="#E6E6E6" BorderThickness="1" Background="#FAFAFA">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Итог на начало периода -->
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="Итог на начало периода" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                        <TextBlock Text="Вес:" Foreground="#666" Margin="0,0,6,0"/>
+                        <TextBlock Text="{Binding OpeningWeight, StringFormat=N3}" FontWeight="SemiBold"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Сумма:" Foreground="#666" Margin="0,0,6,0"/>
+                        <TextBlock Text="{Binding OpeningSum, StringFormat=N2}" FontWeight="SemiBold"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Итог на текущий период (движение) -->
+                <StackPanel Grid.Column="1">
+                    <TextBlock Text="Итог за текущий период" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                        <TextBlock Text="Вес:" Foreground="#666" Margin="0,0,6,0"/>
+                        <TextBlock Text="{Binding PeriodNetWeight, StringFormat=N3}" FontWeight="SemiBold"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Сумма:" Foreground="#666" Margin="0,0,6,0"/>
+                        <TextBlock Text="{Binding PeriodNetSum, StringFormat=N2}" FontWeight="SemiBold"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Итог на конец периода -->
+                <StackPanel Grid.Column="2">
+                    <TextBlock Text="Итог на конец периода" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                        <TextBlock Text="Вес:" Foreground="#666" Margin="0,0,6,0"/>
+                        <TextBlock Text="{Binding ClosingWeight, StringFormat=N3}" FontWeight="SemiBold"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Сумма:" Foreground="#666" Margin="0,0,6,0"/>
+                        <TextBlock Text="{Binding ClosingSum, StringFormat=N2}" FontWeight="SemiBold"/>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

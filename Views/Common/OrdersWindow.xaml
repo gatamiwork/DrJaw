@@ -1,0 +1,253 @@
+﻿<Window x:Class="DrJaw.Views.Common.OrdersWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Заказы" Height="650" Width="1405"
+        WindowStartupLocation="CenterOwner">
+
+    <Window.Resources>
+        <!-- Группируем элементы по ключу чека -->
+        <CollectionViewSource x:Key="GroupedLines" Source="{Binding Lines}">
+            <CollectionViewSource.GroupDescriptions>
+                <PropertyGroupDescription PropertyName="GroupKey"/>
+            </CollectionViewSource.GroupDescriptions>
+        </CollectionViewSource>
+
+        <!-- Контейнер группы: экспандер обязателен (раскрываемость) + виртуализируемая панель -->
+        <GroupStyle x:Key="GroupWithExpander">
+            <GroupStyle.Panel>
+                <ItemsPanelTemplate>
+                    <VirtualizingStackPanel/>
+                </ItemsPanelTemplate>
+            </GroupStyle.Panel>
+            <GroupStyle.ContainerStyle>
+                <Style TargetType="{x:Type GroupItem}">
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="{x:Type GroupItem}">
+                                <Expander IsExpanded="True" Margin="0,6,0,2">
+                                    <Expander.Header>
+                                        <!-- DataContext = CollectionViewGroup -->
+                                        <Border Background="#F6F6F6" BorderBrush="#E6E6E6"
+                                                BorderThickness="1" Padding="8" CornerRadius="6">
+                                            <DockPanel LastChildFill="False">
+                                                <TextBlock DockPanel.Dock="Left"
+                                                           Text="{Binding Name}"
+                                                           FontWeight="SemiBold"/>
+                                                <TextBlock DockPanel.Dock="Right"
+                                                           Foreground="#666"
+                                                           Text="{Binding ItemCount, StringFormat=Позиций: {0}}"/>
+                                            </DockPanel>
+                                        </Border>
+                                    </Expander.Header>
+                                    <ItemsPresenter/>
+                                </Expander>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </GroupStyle.ContainerStyle>
+        </GroupStyle>
+    </Window.Resources>
+
+    <Grid Margin="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Верхняя панель: период + фильтры + кнопки -->
+        <Grid Grid.Row="0" Margin="0,0,0,8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="140"/>
+                <ColumnDefinition Width="8"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="140"/>
+                <ColumnDefinition Width="16"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="200"/>
+                <ColumnDefinition Width="16"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="220"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="8"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Column="0" Text="Период c:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+            <DatePicker Grid.Column="1" SelectedDate="{Binding FromDate, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+            <TextBlock Grid.Column="3" Text="по:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+            <DatePicker Grid.Column="4" SelectedDate="{Binding ToDate, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+            <TextBlock Grid.Column="6" Text="Магазин:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+            <ComboBox Grid.Column="7"
+                      ItemsSource="{Binding Marts}"
+                      SelectedItem="{Binding SelectedMart, Mode=TwoWay}"
+                      DisplayMemberPath="Name"
+                      MinWidth="180"/>
+
+            <TextBlock Grid.Column="9" Text="Пользователь:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+            <ComboBox Grid.Column="10"
+                      ItemsSource="{Binding Users}"
+                      SelectedItem="{Binding SelectedUser, Mode=TwoWay}"
+                      DisplayMemberPath="Name"
+                      MinWidth="200"/>
+
+            <Button Grid.Column="12" Content="Показать все" MinWidth="130" Height="32"
+                    Click="OnExpandAllClicked"/>
+            <Button Grid.Column="14" Content="Скрыть все" MinWidth="130" Height="32"
+                    Click="OnCollapseAllClicked"/>
+        </Grid>
+
+        <!-- Список заказов, сгруппированный по чеку -->
+        <ListView x:Name="OrdersList"
+                  Grid.Row="1"
+                  ItemsSource="{Binding Source={StaticResource GroupedLines}}"
+                  BorderThickness="0"
+                  ScrollViewer.CanContentScroll="True"
+                  VirtualizingPanel.IsVirtualizing="True"
+                  VirtualizingPanel.IsVirtualizingWhenGrouping="True"
+                  VirtualizingPanel.VirtualizationMode="Recycling"
+                  VirtualizingPanel.CacheLengthUnit="Item"
+                  VirtualizingPanel.CacheLength="8"
+                  ScrollViewer.IsDeferredScrollingEnabled="False">
+            <ListView.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <VirtualizingStackPanel/>
+                </ItemsPanelTemplate>
+            </ListView.ItemsPanel>
+
+            <ListView.GroupStyle>
+                <StaticResource ResourceKey="GroupWithExpander"/>
+            </ListView.GroupStyle>
+
+            <ListView.ItemContainerStyle>
+                <Style TargetType="ListViewItem">
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                    <Setter Property="Padding" Value="0"/>
+                </Style>
+            </ListView.ItemContainerStyle>
+
+            <!-- Элемент списка (позиция) -->
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <Border HorizontalAlignment="Stretch" CornerRadius="8" BorderBrush="#E6E6E6" BorderThickness="1"
+                            Padding="10" Margin="0,4">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="108"/>
+                                <ColumnDefinition Width="16"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="160"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- превью -->
+                            <Border Grid.Column="0" Width="96" Height="96" Background="#FAFAFA" CornerRadius="6"
+                                    SnapsToDevicePixels="True" UseLayoutRounding="True">
+                                <Grid>
+                                    <Image Source="{Binding Thumbnail}"
+                                           Stretch="Uniform"
+                                           RenderOptions.BitmapScalingMode="LowQuality"
+                                           SnapsToDevicePixels="True"/>
+                                    <TextBlock Text="Нет изображения"
+                                               Foreground="#888" FontSize="12"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Thumbnail}" Value="{x:Null}">
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Grid>
+                            </Border>
+
+                            <!-- детали -->
+                            <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding Articul}" FontSize="16" FontWeight="SemiBold"
+                                           TextTrimming="CharacterEllipsis"/>
+                                <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                    <TextBlock Text="{Binding Size, StringFormat=Размер: {0}}" Foreground="#666"/>
+                                    <TextBlock Text="  •  " Foreground="#AAA"/>
+                                    <TextBlock Text="{Binding Weight, StringFormat=Вес: {0:N2}}" Foreground="#666"/>
+                                    <TextBlock Text="  •  " Foreground="#AAA"/>
+                                    <TextBlock Text="{Binding Stones, StringFormat=Вставки: {0}}" Foreground="#666"/>
+                                </StackPanel>
+                                <TextBlock Text="{Binding Metal}" Foreground="#666"/>
+                            </StackPanel>
+
+                            <!-- цена -->
+                            <StackPanel Grid.Column="3" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding Price, StringFormat=Цена: {0:N2}}"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+
+        <!-- Итоги (разбиты по полям) -->
+        <Border Grid.Row="2" Margin="0,8,0,0" Padding="10"
+        BorderThickness="1" BorderBrush="#E6E6E6" CornerRadius="6">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- 3 строки: 0 — вес/золото+серебро, 1 — кол-во, 2 — суммы + 10% -->
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Вес -->
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Общий вес золота:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding GoldWeight, StringFormat={}{0:N2}}"
+                   VerticalAlignment="Center" TextAlignment="Right" Margin="0,0,12,0"/>
+
+                <TextBlock Grid.Row="0" Grid.Column="3" Text="Общий вес серебра:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                <TextBlock Grid.Row="0" Grid.Column="4" Text="{Binding SilverWeight, StringFormat={}{0:N2}}"
+                   VerticalAlignment="Center" TextAlignment="Right" Margin="0,0,12,0"/>
+
+                <!-- Кол-во -->
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Общее количество золота:" VerticalAlignment="Center" Margin="0,4,6,0"/>
+                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding GoldCount}" VerticalAlignment="Center"
+                   TextAlignment="Right" Margin="0,4,12,0"/>
+
+                <TextBlock Grid.Row="1" Grid.Column="3" Text="Общее количество серебра:" VerticalAlignment="Center" Margin="0,4,6,0"/>
+                <TextBlock Grid.Row="1" Grid.Column="4" Text="{Binding SilverCount}" VerticalAlignment="Center"
+                   TextAlignment="Right" Margin="0,4,12,0"/>
+
+                <!-- Суммы -->
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Общая стоимость золота:" VerticalAlignment="Center" Margin="0,4,6,0"/>
+                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding GoldSum, StringFormat={}{0:N2}}"
+                   VerticalAlignment="Center" TextAlignment="Right" Margin="0,4,12,0"/>
+
+                <TextBlock Grid.Row="2" Grid.Column="3" Text="Общая стоимость серебра:" VerticalAlignment="Center" Margin="0,4,6,0"/>
+                <TextBlock Grid.Row="2" Grid.Column="4" Text="{Binding SilverSum, StringFormat={}{0:N2}}"
+                   VerticalAlignment="Center" TextAlignment="Right" Margin="0,4,12,0"/>
+
+                <!-- 10% по всей ширине -->
+                <TextBlock Grid.Row="2" Grid.Column="6" Grid.ColumnSpan="2"
+                   Text="{Binding TenPercentSum, StringFormat=10% стоимости проданных изделий: {0:N2}}"
+                   FontWeight="SemiBold" VerticalAlignment="Center" Margin="12,4,0,0"/>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

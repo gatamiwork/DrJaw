@@ -1,5 +1,9 @@
-﻿using System.Diagnostics;
-using System.Windows;
+﻿using System.Windows;
+using System.Data.SqlClient;
+using DrJaw.Services;
+using DrJaw.Services.Config;   // ← добавь
+using DrJaw.Services.MSSQL;   // ← добавь
+using DrJaw.Services.Data;
 using DrJaw.Views;
 using DrJaw.Views.Common;
 
@@ -7,40 +11,80 @@ namespace DrJaw
 {
     public partial class App : Application
     {
-        protected override void OnStartup(StartupEventArgs e)
+        protected override async void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
-
-            // Не даём приложению закрыться, пока сами не решим
             ShutdownMode = ShutdownMode.OnExplicitShutdown;
 
-            // 1) Настройки MSSQL
-            var mssqlWindow = new MSSQLConSet();
-            var res = mssqlWindow.ShowDialog();
-            if (res != true)
+            string? connStr = TryBuildConnStringFromConfig(out bool okFromConfig);
+            if (!okFromConfig)
             {
-                Trace.WriteLine("MSSQL settings dialog canceled.");
-                Shutdown();
-                return;
+                var dbDialog = new MSSQLConnectWindow
+                {
+                    WindowStartupLocation = WindowStartupLocation.CenterScreen,
+                    ShowInTaskbar = false
+                };
+                var dbOk = dbDialog.ShowDialog() == true &&
+                           !string.IsNullOrWhiteSpace(dbDialog.BuiltConnectionString);
+                if (!dbOk) { Shutdown(); return; }
+                connStr = dbDialog.BuiltConnectionString!;
             }
 
-            // 2) Логин
-            var loginWindow = new UserLogin();
-            var loginResult = loginWindow.ShowDialog();
-            if (loginResult != true)
+            var mgr = new MssqlManager(connStr!);
+            var repo = new MssqlRepository(mgr);
+            var refData = new ReferenceDataService(repo);
+            var session = new UserSessionService();
+
+            await refData.EnsureLoadedAsync();
+
+            var loginDialog = new UserLoginWindow(refData, session, repo)
             {
-                Trace.WriteLine("Login canceled.");
-                Shutdown();
-                return;
-            }
+                WindowStartupLocation = WindowStartupLocation.CenterScreen,
+                ShowInTaskbar = false
+            };
+            var loginOk = loginDialog.ShowDialog() == true && loginDialog.SelectedUser != null;
+            if (!loginOk) { Shutdown(); return; }
 
-            // 3) Главное окно
-            var mainWindow = new MainWindow();
-            MainWindow = mainWindow;
-            mainWindow.Show();
+            var windows = new WindowService(session, repo, refData);
+            var main = new MainWindow(windows, session, refData, repo);
+            MainWindow = main;
 
-            // Возвращаем обычный режим
             ShutdownMode = ShutdownMode.OnMainWindowClose;
+            main.Show();
+        }
+
+        private static string? TryBuildConnStringFromConfig(out bool ok)
+        {
+            ok = false;
+            var cfg = ConfigService.Load();
+            if (string.IsNullOrWhiteSpace(cfg.Mssql.Server) ||
+                string.IsNullOrWhiteSpace(cfg.Mssql.Database) ||
+                string.IsNullOrWhiteSpace(cfg.Mssql.Username))
+                return null;
+
+            var pwd = Secret.Unprotect(cfg.Mssql.PasswordEnc);
+            try
+            {
+                var sb = new SqlConnectionStringBuilder
+                {
+                    DataSource = cfg.Mssql.Server,
+                    InitialCatalog = cfg.Mssql.Database,
+                    UserID = cfg.Mssql.Username,
+                    Password = pwd,
+                    Encrypt = true,
+                    TrustServerCertificate = true
+                };
+                // тестим синхронно
+                using var cn = new SqlConnection(sb.ConnectionString);
+                cn.Open();
+                ok = true;
+                return sb.ConnectionString;
+            }
+            catch
+            {
+                ok = false;
+                return null;
+            }
         }
     }
 }

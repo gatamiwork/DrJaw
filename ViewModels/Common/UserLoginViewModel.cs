@@ -1,22 +1,50 @@
-﻿using DrJaw.Models;
-using DrJaw.Utils;
-using DrJaw.Views.User;
-using MaterialDesignThemes.Wpf;
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Diagnostics;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using DrJaw.Models;
+using DrJaw.Services;
+using DrJaw.Services.Data;
+using DrJaw.Services.MSSQL;
+using DrJaw.ViewModels;
 
 namespace DrJaw.ViewModels.Common
 {
-    public class UserLoginViewModel : INotifyPropertyChanged
+    public sealed class UserLoginViewModel : ViewModelBase
     {
-        public ObservableCollection<MSSQLUser> Users { get; } = new();
-        public ObservableCollection<MSSQLMart> Marts { get; } = new();
+        private readonly IReferenceDataService _refData;
+        private readonly IMssqlRepository? _repoForPwd;
+        private readonly IUserSessionService _session;
+
+        public ReadOnlyObservableCollection<MSSQLUser> Users => _refData.Users;
+        public ReadOnlyObservableCollection<MSSQLMart> Marts => _refData.Marts;
+        public ReadOnlyObservableCollection<MSSQLMetal> Metals => _refData.Metals;
+
+        public event EventHandler<bool>? CloseRequested;
+        public event EventHandler<string>? ErrorOccurred;
+
+        public UserLoginViewModel(IReferenceDataService refData, IUserSessionService session, IMssqlRepository? repoForPwd = null)
+        {
+            _refData = refData ?? throw new ArgumentNullException(nameof(refData));
+            _repoForPwd = repoForPwd;
+            _session = session ?? throw new ArgumentNullException(nameof(session));
+
+            OkCommand = new AsyncRelayCommand(async _ => await OnOkAsync(), _ => CanOk());
+            CancelCommand = new RelayCommand(_ => CloseRequested?.Invoke(this, false));
+        }
+
+        //public async Task EnsureLoadedAsync()
+        //{
+        //    await _refData.EnsureLoadedAsync();
+        //    RaiseCanExec(); // пересчитать OkCommand.CanExecute()
+        //}
+        public async Task EnsureLoadedAsync()
+        {
+            await _refData.EnsureLoadedAsync();
+            EnsureDefaultsForRole();        // подставит первый металл и/или магазин
+            RaiseCanExec();
+        }
 
         private MSSQLUser? _selectedUser;
         public MSSQLUser? SelectedUser
@@ -26,9 +54,9 @@ namespace DrJaw.ViewModels.Common
             {
                 if (Set(ref _selectedUser, value))
                 {
-                    OnPropertyChanged(nameof(IsAdmin));
-                    if (!IsAdmin) AdminPassword = string.Empty; // очистить
-                    RaiseCanExecutes();
+                    UpdateRoleFlags();
+                    EnsureDefaultsForRole();
+                    RaiseCanExec();
                 }
             }
         }
@@ -37,125 +65,112 @@ namespace DrJaw.ViewModels.Common
         public MSSQLMart? SelectedMart
         {
             get => _selectedMart;
-            set
+            set 
             {
                 if (Set(ref _selectedMart, value))
-                    RaiseCanExecutes(); // <- добавить
+                {
+                    if (IsUser && SelectedMetal is null && Metals.Count > 0)// если пользователь, то подставляем первый металл
+                        SelectedMetal = Metals[0];                          // иначе оставляем null
+                    RaiseCanExec();
+                }
+            }
+        }
+        private MSSQLMetal? _selectedMetal;
+        public MSSQLMetal? SelectedMetal
+        {
+            get => _selectedMetal;
+            set
+            {
+                if (Set(ref _selectedMetal, value)) RaiseCanExec();
             }
         }
 
         private string _adminPassword = "";
-        public string AdminPassword { get => _adminPassword; set => Set(ref _adminPassword, value); }
-
-        public bool IsAdmin =>
-            string.Equals(SelectedUser?.Role, "ADMIN", StringComparison.OrdinalIgnoreCase);
-
-        private bool _isBusy;
-        public bool IsBusy
+        public string AdminPassword
         {
-            get => _isBusy;
-            private set
-            {
-                if (Set(ref _isBusy, value))
-                {
-                    OnPropertyChanged(nameof(IsNotBusy));
-                    RaiseCanExecutes(); // <- добавить
-                }
-            }
-        }
-        private void RaiseCanExecutes()
-        {
-            (LoginCommand as RelayCommandBase)?.RaiseCanExecuteChanged();
-        }
-        public bool IsNotBusy => !IsBusy;
-
-        private string? _error;
-        public string? Error
-        {
-            get => _error;
-            private set
-            {
-                _error = value;
-                OnPropertyChanged(); // даже если значение то же самое
-                if (!string.IsNullOrWhiteSpace(value))
-                    SnackbarQueue.Enqueue(value); // покажем снова
-            }
+            get => _adminPassword;
+            set { if (Set(ref _adminPassword, value)) RaiseCanExec(); }
         }
 
-        public ISnackbarMessageQueue SnackbarQueue { get; } =
-            new SnackbarMessageQueue(TimeSpan.FromSeconds(1));
+        private bool _isUser;
+        public bool IsUser { get => _isUser; private set => Set(ref _isUser, value); }
 
-        public ICommand LoadCommand { get; }
-        public ICommand LoginCommand { get; }
+        private bool _isAdmin;
+        public bool IsAdmin { get => _isAdmin; private set => Set(ref _isAdmin, value); }
+
+        public AsyncRelayCommand OkCommand { get; }
         public ICommand CancelCommand { get; }
 
-        public event Action<bool>? RequestClose;
-
-        public UserLoginViewModel()
+        private async Task OnOkAsync()
         {
-            LoadCommand = new AsyncRelayCommand(LoadAsync);
-            LoginCommand = new RelayCommand(Login, CanLogin);
-            CancelCommand = new RelayCommand(() => RequestClose?.Invoke(false));
-        }
+            if (SelectedUser is null) return;
 
-        private async Task LoadAsync()
-        {
-            IsBusy = true; Error = null;
-            try
+            if (IsAdmin)
             {
-                // грузим прямо из Storage.Repo
-                var users = await Storage.Repo.LoadUsers();
-                var marts = await Storage.Repo.LoadMarts();
-                var metal = await Storage.Repo.LoadMetals();
+                if (_repoForPwd is null)
+                {
+                    ErrorOccurred?.Invoke(this, "Не настроена проверка пароля.");
+                    return;
+                }
 
-                Users.Clear(); foreach (var u in users) Users.Add(u);
-                Marts.Clear(); foreach (var m in marts) Marts.Add(m);
-
-                Storage.Users = users?.ToList() ?? new List<MSSQLUser>();
-                Storage.Marts = marts?.ToList() ?? new List<MSSQLMart>();
-                Storage.Metals = metal?.ToList() ?? new List<MSSQLMetal>();
-
-                if (Storage.CurrentMetal == null)
-                    Storage.CurrentMetal = Storage.Metals.FirstOrDefault();
-
-                // предзаполнение из текущего состояния
-                if (Storage.CurrentUser != null)
-                    SelectedUser = Users.FirstOrDefault(u => u.Id == Storage.CurrentUser.Id) ?? Users.FirstOrDefault();
-
-                if (Storage.CurrentMart != null)
-                    SelectedMart = Marts.FirstOrDefault(m => m.Id == Storage.CurrentMart.Id) ?? Marts.FirstOrDefault();
+                var ok = await _repoForPwd.CheckPasswordAsync(SelectedUser.Id, AdminPassword);
+                if (!ok)
+                {
+                    ErrorOccurred?.Invoke(this, "Неверный пароль администратора.");
+                    return;
+                }
             }
-            catch (Exception ex) { Error = ex.Message; }
-            finally { IsBusy = false; }
+
+            _session.SignIn(SelectedUser, IsAdmin ? null : SelectedMart);
+            CloseRequested?.Invoke(this, true);
         }
 
-        private bool CanLogin() =>
-            IsNotBusy && SelectedUser != null && SelectedMart != null;
-
-        private void Login()
+        private void UpdateRoleFlags()
         {
-            if (!CanLogin()) { Error = "Выберите пользователя и магазин."; return; }
-
-            if (IsAdmin && string.IsNullOrWhiteSpace(AdminPassword))
-            { Error = "Введите пароль администратора."; return; }
-
-            if (IsAdmin && AdminPassword != SelectedUser!.Password)
-            { Error = "Пароль администратора неверный"; return; }
-
-            Storage.CurrentUser = SelectedUser!;
-            Storage.CurrentMart = SelectedMart!;
-
-            RequestClose?.Invoke(true);
+            var role = SelectedUser?.Role?.ToUpperInvariant() ?? "USER";
+            IsUser = role == "USER";
+            IsAdmin = role == "ADMIN";
         }
 
-        // INotifyPropertyChanged
-        public event PropertyChangedEventHandler? PropertyChanged;
-        protected bool Set<T>(ref T f, T v, [CallerMemberName] string? n = null)
+        private void EnsureDefaultsForRole()
         {
-            if (Equals(f, v)) return false;
-            f = v; PropertyChanged?.Invoke(this, new(n)); return true;
+            if (IsUser && SelectedMart is null && Marts.Count > 0)
+                SelectedMart = Marts[0];
+
+            if (!IsAdmin) AdminPassword = "";
         }
-        protected void OnPropertyChanged([CallerMemberName] string? n = null) =>
-            PropertyChanged?.Invoke(this, new(n));
+
+        private bool CanOk()
+        {
+            if (SelectedUser is null) return false;
+            if (IsUser && SelectedMart is null) return false;
+            if (IsAdmin)
+            {
+                if (_repoForPwd is null) return false;
+                if (string.IsNullOrWhiteSpace(AdminPassword)) return false;
+            }
+            return true;
+        }
+
+        private void RaiseCanExec() => OkCommand.RaiseCanExecuteChanged();
+
+        public void SetInitialSelection(MSSQLUser? user, MSSQLMart? mart, MSSQLMetal? metal = null)
+        {
+            if (user != null)
+            {
+                var u = Users.FirstOrDefault(x => x.Id == user.Id);
+                if (u != null) SelectedUser = u;
+            }
+            if (IsUser && mart != null)
+            {
+                var m = Marts.FirstOrDefault(x => x.Id == mart.Id);
+                if (m != null) SelectedMart = m;
+            }
+            if (IsUser && metal != null)
+            {
+                var me = Metals.FirstOrDefault(x => x.Id == metal.Id);
+                if (me != null) SelectedMetal = me;
+            }
+        }
     }
 }

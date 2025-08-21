@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36127.28 d17.14
+VisualStudioVersion = 17.14.36127.28
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DrJaw", "DrJaw.csproj", "{AC3216B9-AD9D-4B5E-B8C0-45426297ECF1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DrJaw", "DrJaw.csproj", "{6B880B12-D290-4087-ABAB-CA9BE940F957}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,15 +11,15 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{AC3216B9-AD9D-4B5E-B8C0-45426297ECF1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{AC3216B9-AD9D-4B5E-B8C0-45426297ECF1}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{AC3216B9-AD9D-4B5E-B8C0-45426297ECF1}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{AC3216B9-AD9D-4B5E-B8C0-45426297ECF1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6B880B12-D290-4087-ABAB-CA9BE940F957}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6B880B12-D290-4087-ABAB-CA9BE940F957}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6B880B12-D290-4087-ABAB-CA9BE940F957}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6B880B12-D290-4087-ABAB-CA9BE940F957}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {4A186A6D-3C0E-40BA-B9AA-4B4ABC079EAF}
+		SolutionGuid = {5349F2D5-60EF-4D55-A838-7D9D55F49720}
 	EndGlobalSection
 EndGlobal

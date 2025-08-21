@@ -1,0 +1,39 @@
+﻿<Window x:Class="DrJaw.Views.User.LomOutWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:helpers="clr-namespace:DrJaw.Helpers"
+        Title="Отгрузка лома"
+        Height="180" Width="420"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize">
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="12"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="140"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Вес -->
+        <TextBlock Grid.Row="0" Grid.Column="0"
+                   VerticalAlignment="Center" Margin="0,0,12,0"
+                   Text="Вес, грамм:"/>
+        <TextBox  Grid.Row="0" Grid.Column="1"
+                  helpers:NumericInput.DecimalOnly="True"
+                  helpers:NumericInput.MaxDecimalPlaces="2"
+                  Text="{Binding Weight, UpdateSourceTrigger=PropertyChanged}"
+                  Width="180" HorizontalAlignment="Left"/>
+
+        <!-- Кнопки -->
+        <StackPanel Grid.Row="2" Grid.ColumnSpan="2"
+                    Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="Отгрузить" Width="120" Height="32" Margin="0,0,8,0"
+                    IsDefault="True" Command="{Binding SaveCommand}"/>
+            <Button Content="Отмена" Width="100" Height="32"
+                    IsCancel="True" Command="{Binding CancelCommand}"/>
+        </StackPanel>
+    </Grid>
+</Window>
